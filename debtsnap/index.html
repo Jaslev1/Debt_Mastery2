@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DebtSnap — Your free debt action plan</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ── HEADER ─────────────────────────────────────── -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-dot"></span>
+        DebtSnap
+      </div>
+      <div class="header-right">
+        <span class="header-badge">Free · No account needed</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── PROGRESS ───────────────────────────────────── -->
+  <div class="progress-wrap" id="progress-wrap" style="display:none">
+    <div class="progress-track">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <div class="progress-steps">
+      <span class="progress-step active" id="ps1">Debts</span>
+      <span class="progress-step" id="ps2">Profile</span>
+      <span class="progress-step" id="ps3">Plan</span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════
+       STEP 0 — WELCOME
+  ══════════════════════════════════════════════════ -->
+  <main class="step active" id="s0">
+    <div class="hero">
+      <div class="hero-eyebrow">Free · Takes 3 minutes</div>
+      <h1 class="hero-title">Your debt.<br>Your plan.<br><em>Your way out.</em></h1>
+      <p class="hero-sub">Enter your debts, answer 5 quick questions, and get an AI-generated action plan personalized to your situation — no account required.</p>
+      <button class="btn-primary" onclick="startApp()">Get my free snapshot →</button>
+      <p class="hero-note">No credit check &nbsp;·&nbsp; No account &nbsp;·&nbsp; 100% free</p>
+    </div>
+
+    <div class="features">
+      <div class="feature-card">
+        <div class="feature-num">01</div>
+        <div class="feature-text">
+          <strong>Enter your debts</strong>
+          <span>Credit cards, student loans, medical</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">02</div>
+        <div class="feature-text">
+          <strong>5-question profile</strong>
+          <span>We identify your financial behavior type</span>
+        </div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-num">03</div>
+        <div class="feature-text">
+          <strong>AI action plan</strong>
+          <span>Personalized to your situation — free</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="trust-strip">
+      <span>Built on CFPB research</span>
+      <span class="strip-dot">·</span>
+      <span>FDCPA-informed</span>
+      <span class="strip-dot">·</span>
+      <span>Not legal advice</span>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       STEP 1 — DEBTS
+  ══════════════════════════════════════════════════ -->
+  <main class="step" id="s1">
+    <div class="step-header">
+      <h2>What do you owe?</h2>
+      <p class="step-sub">Add each account. Estimates are fine — we just need the big picture.</p>
+    </div>
+
+    <div class="debt-section">
+      <div id="debt-list"></div>
+      <button class="btn-add" onclick="addDebt()" id="add-debt-btn">
+        <span class="plus-icon">+</span> Add another account
+      </button>
+    </div>
+
+    <div class="total-banner" id="total-banner" style="display:none">
+      <span class="total-label">Total debt</span>
+      <span class="total-amount" id="total-amount">$0</span>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="income-section">
+      <h3 class="section-title">Your finances</h3>
+      <div class="two-col">
+        <div class="field">
+          <label>Monthly take-home income</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="income" placeholder="3,200" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label>Monthly essential expenses</label>
+          <div class="input-prefix-wrap">
+            <span class="input-prefix">$</span>
+            <input type="number" id="expenses" placeholder="2,100" min="0">
+          </div>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="field">
+          <label>Employment</label>
+          <select id="employment">
+            <option value="">Select...</option>
+            <option value="private">Private sector</option>
+            <option value="public">Government / public sector</option>
+            <option value="nonprofit">Nonprofit</option>
+            <option value="part-time">Part-time</option>
+            <option value="self-employed">Self-employed</option>
+            <option value="unemployed">Unemployed</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Household size</label>
+          <select id="family">
+            <option value="1">1 person</option>
+            <option value="2">2 people</option>
+            <option value="3">3 people</option>
+            <option value="4">4 people</option>
+            <option value="5">5 or more</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="err-msg" id="err1">Please add at least one debt with a balance to continue.</div>
+
+    <div class="step-nav">
+      <button class="btn-ghost" onclick="goTo('s0', 0)">← Back</button>
+      <button class="btn-primary" onclick="next1()">Continue to profile →</button>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       STEP 2 — QUIZ
+  ══════════════════════════════════════════════════ -->
+  <main class="step" id="s2">
+    <div class="step-header">
+      <h2>5 quick questions</h2>
+      <p class="step-sub">Honest answers give you a better plan. No wrong answers here.</p>
+    </div>
+
+    <div id="quiz-container"></div>
+
+    <div class="err-msg" id="err2">Please answer all 5 questions to continue.</div>
+
+    <div class="step-nav">
+      <button class="btn-ghost" onclick="goTo('s1', 33)">← Back</button>
+      <button class="btn-primary" onclick="next2()">Generate my plan →</button>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       STEP LOADING
+  ══════════════════════════════════════════════════ -->
+  <main class="step" id="s-loading">
+    <div class="loading-wrap">
+      <div class="loading-illustration">
+        <svg viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="60" cy="60" r="48" stroke="#1a1a1a" stroke-width="2" stroke-dasharray="6 4"/>
+          <circle class="spin-circle" cx="60" cy="60" r="32" stroke="#FFD84D" stroke-width="3" stroke-linecap="round" stroke-dasharray="80 120"/>
+          <circle cx="60" cy="60" r="8" fill="#1a1a1a"/>
+          <path d="M60 28 L60 36" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <path d="M60 84 L60 92" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <path d="M28 60 L36 60" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+          <path d="M84 60 L92 60" stroke="#1a1a1a" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <p class="loading-msg" id="load-msg">Analyzing your situation...</p>
+      <p class="loading-sub" id="load-sub">Calculating your debt-to-income ratio</p>
+    </div>
+  </main>
+
+  <!-- ══════════════════════════════════════════════════
+       STEP 3 — RESULTS
+  ══════════════════════════════════════════════════ -->
+  <main class="step" id="s3">
+    <div class="results-header">
+      <div class="results-eyebrow">Your debt snapshot</div>
+      <h2 id="results-headline">Your personalized action plan</h2>
+    </div>
+
+    <div class="metrics-row" id="metrics-row"></div>
+
+    <div class="profile-card" id="profile-card"></div>
+
+    <div class="divider"></div>
+
+    <div class="actions-section">
+      <div class="actions-label">Your action plan</div>
+      <div id="actions-list"></div>
+    </div>
+
+    <div class="upgrade-card">
+      <div class="upgrade-lock">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <rect x="5" y="11" width="14" height="10" rx="2" stroke="#1a1a1a" stroke-width="1.5"/>
+          <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="upgrade-title">Unlock actions 4 & 5</div>
+      <div class="upgrade-desc">Get negotiation scripts, creditor contact templates, and step-by-step guidance matched to your profile type.</div>
+      <button class="btn-primary" style="width:100%">Start free — 7 days on us</button>
+      <p class="upgrade-note">Then $12/month · Cancel anytime · No setup fees</p>
+    </div>
+
+    <button class="btn-ghost" style="margin-top:2rem" onclick="resetApp()">← Start over</button>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
