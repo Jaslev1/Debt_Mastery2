@@ -181,11 +181,29 @@ let currentPlan   = null;
 // ── NAVIGATION ──────────────────────────────────────
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  const el = document.getElementById('page-' + id) ||
-             document.getElementById('page-s' + id.replace(/^s/, ''));
-  if (el) el.classList.add('active');
+  // 'home' maps to page-home, 's1' maps to page-s1, etc.
+  const pageId = 'page-' + id;
+  const el = document.getElementById(pageId);
+  if (el) {
+    el.classList.add('active');
+  } else {
+    // fallback: try page-sN format
+    const el2 = document.getElementById('page-s' + id.replace(/^s/,''));
+    if (el2) el2.classList.add('active');
+  }
   document.getElementById('progress-wrap').style.display = 'none';
   window.scrollTo(0, 0);
+}
+
+// Navigate to report — ensures report is built before showing
+function goToReport() {
+  if (!currentCtx || !currentPlan) {
+    alert('Your plan data is not available. Please complete the questionnaire first.');
+    showPage('home');
+    return;
+  }
+  buildReportPage();
+  showPage('report');
 }
 
 function showStep(id, pct) {
@@ -672,6 +690,13 @@ function toggleExplainer(btn) {
   btn.textContent    = open ? 'What does my profile mean? ↓' : 'Hide profile explanation ↑';
 }
 
+
+// ── PLAN CARD SELECTION ───────────────────────────
+function selectPlan(el) {
+  document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
 // ── TRIAL / SIGNUP ─────────────────────────────────
 function handleTrialSignup() {
   const email = (document.getElementById('trial-email').value || '').trim();
@@ -716,7 +741,6 @@ function handleTrialSignup() {
 
   // In production: POST to your backend to create account + trigger confirmation email
   // Stub: simulate email send, show confirmation, build report
-  buildReportPage();
   showPage('confirm');
 }
 
@@ -868,4 +892,6 @@ function toggleFaq(el) {
 function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
 
 // ── INIT ─────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => showPage('home'));
+document.addEventListener('DOMContentLoaded', () => {
+  showPage('process');
+});

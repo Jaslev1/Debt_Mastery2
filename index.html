@@ -13,16 +13,35 @@
 
 <header class="header">
   <div class="header-inner">
-    <button class="logo" onclick="showPage('home')"><span class="logo-dot"></span>DebtSnap</button>
+    <!-- Snapping fingers logo -->
+    <button class="logo" onclick="showPage('process')">
+      <span class="logo-mark">
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Palm / lower hand -->
+          <path d="M13 23 C11 23 9 21 9 18 L9 12 C9 11.2 9.7 10.5 10.5 10.5 C11.3 10.5 12 11.2 12 12 L12 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <!-- Index finger -->
+          <path d="M12 16 L12 8.5 C12 7.7 12.7 7 13.5 7 C14.3 7 15 7.7 15 8.5 L15 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Middle finger -->
+          <path d="M15 16 L15 9 C15 8.2 15.7 7.5 16.5 7.5 C17.3 7.5 18 8.2 18 9 L18 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Ring finger -->
+          <path d="M18 16 L18 11 C18 10.2 18.7 9.5 19.5 9.5 C20.3 9.5 21 10.2 21 11 L21 18 C21 21 19 23 17 23 L13 23" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Thumb coming in to snap -->
+          <path d="M10.5 13.5 C9 12.8 7.5 13.5 7.5 15" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
+          <!-- Snap sparks — red -->
+          <line x1="6" y1="9.5" x2="5.2" y2="8" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="4.5" y1="12.5" x2="3" y2="12.5" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
+          <line x1="5.5" y1="15.5" x2="4" y2="16.5" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
+        </svg>
+      </span>
+      DebtSnap
+    </button>
     <nav class="header-nav">
-      <button class="nav-link" onclick="showPage('about')">About</button>
       <button class="nav-link" onclick="showPage('process')">How it works</button>
       <button class="nav-link nav-cta" onclick="startApp()">Get my free plan</button>
     </nav>
     <button class="hamburger" onclick="toggleMobile()"><span></span><span></span><span></span></button>
   </div>
   <div class="mobile-nav" id="mobile-nav">
-    <button onclick="showPage('about');toggleMobile()">About</button>
     <button onclick="showPage('process');toggleMobile()">How it works</button>
     <button onclick="startApp();toggleMobile()">Get my free plan →</button>
   </div>
@@ -37,39 +56,26 @@
   </div>
 </div>
 
-<!-- ══ HOME ════════════════════════════════════════ -->
-<div class="page active" id="page-home">
-  <div class="hero">
+<!-- ══ HOME / ABOUT (landing) ══════════════════════ -->
+<div class="page" id="page-home">
+  <div class="landing-hero">
     <div class="eyebrow">Free · 3 minutes · No account needed</div>
-    <h1 class="hero-title">Your debt.<br>Your plan.<br><em>Your way out.</em></h1>
-    <p class="hero-sub">Over 80 million Americans are carrying debt that feels impossible to tackle. DebtSnap gives you a personalized action plan — built on the same research used by consumer law attorneys — completely free.</p>
-    <button class="btn-primary" onclick="startApp()">Get my free snapshot →</button>
+    <div class="tier-headline">
+      <span class="tier-line tier-1">Too much debt.</span>
+      <span class="tier-line tier-2">A custom plan.</span>
+      <span class="tier-line tier-3">Your way out.</span>
+    </div>
+    <p class="landing-sub">Over 80 million Americans are carrying debt that feels impossible to tackle. DebtSnap gives you a personalized action plan — built on the same research used by consumer law attorneys — completely free.</p>
+    <button class="btn-primary red" onclick="startApp()">Get my free snapshot →</button>
     <p class="hero-note">No credit check · Nothing to buy · Your data stays private</p>
   </div>
+
   <div class="stat-strip">
     <div class="stat"><div class="stat-n">$1.28T</div><div class="stat-l">Credit card debt in the US right now</div></div>
     <div class="stat"><div class="stat-n">81%</div><div class="stat-l">Of people in debt want to act but don't know where to start</div></div>
-    <div class="stat"><div class="stat-n">15–25%</div><div class="stat-l">What traditional debt agencies charge. We charge a fraction of that.</div></div>
+    <div class="stat"><div class="stat-n">15–25%</div><div class="stat-l">What traditional debt agencies charge. We charge a fraction.</div></div>
   </div>
-  <div class="features">
-    <div class="feature"><div class="f-num">01</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
-    <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer 5 quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
-    <div class="feature"><div class="f-num">03</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
-  </div>
-  <div class="trust-bar">
-    <span>Built on CFPB research</span><span class="dot">·</span>
-    <span>FDCPA-informed guidance</span><span class="dot">·</span>
-    <span>We never sell your data</span><span class="dot">·</span>
-    <span>Not legal advice</span>
-  </div>
-</div>
 
-<!-- ══ ABOUT ════════════════════════════════════════ -->
-<div class="page" id="page-about">
-  <div class="about-hero">
-    <div class="eyebrow">About DebtSnap</div>
-    <h1>Debt relief shouldn't cost a fortune.<br><em>Or require a lawyer.</em></h1>
-  </div>
   <div class="content-body">
     <section class="cs">
       <h2>Why we built this</h2>
@@ -78,7 +84,6 @@
       <p>We combined the latest consumer finance research — from the CFPB, academic behavioral economists, and consumer law practitioners — to create a genuinely personalized, step-by-step debt action plan that costs almost nothing.</p>
     </section>
     <div class="pullquote">
-      <div class="pq-bar"></div>
       <div>
         <blockquote>"63% of student loan borrowers have difficulty making payments. 45% of lower-income borrowers qualify for $0 per month in repayments — and simply don't know it."</blockquote>
         <cite>— CFPB Student Loan Borrower Survey, 2024</cite>
@@ -88,44 +93,54 @@
       <h2>What makes us different</h2>
       <p>Most debt tools give you a budget calculator and a list of tips. DebtSnap does something different: it figures out who you are first — your financial situation, your behavior patterns, your goals — and builds a plan specifically for you.</p>
       <p>We use a research-backed behavioral framework developed from analysis of nearly 400,000 real debt cases to understand how you relate to money. That's what drives every recommendation we make.</p>
-      <p>We also know — from the data — that pressure-based, threatening approaches make things worse for most people. Every part of DebtSnap is designed to feel calm, clear, and achievable.</p>
+      <p>We also know from the data that pressure-based, threatening approaches make outcomes worse for most people. Every part of DebtSnap is designed to feel calm, clear, and achievable.</p>
     </section>
     <div class="about-cards">
       <div class="ac">
         <div class="ac-icon-wrap">
-          <svg width="18" height="20" viewBox="0 0 18 20" fill="none"><rect x="2" y="9" width="14" height="10" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M5 9V6a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><rect x="1" y="8" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M4 8V5.5a4 4 0 0 1 8 0V8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
         </div>
         <strong>Your privacy is protected</strong>
         <p>We never sell, share, or monetize your financial data. What you enter stays between you and the tool. Nothing is stored on our servers.</p>
       </div>
       <div class="ac">
         <div class="ac-icon-wrap">
-          <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M9 2L11.5 7H16.5L12.5 10.5L14 16L9 13L4 16L5.5 10.5L1.5 7H6.5L9 2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 1.5l2 4.5h4.5l-3.5 3 1.5 5L8 11.5l-4.5 2.5 1.5-5L1.5 6H6L8 1.5Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
         </div>
         <strong>Not a law firm. Not a debt company.</strong>
         <p>We provide information and guidance — not legal advice. We don't negotiate on your behalf. We teach you how to do it yourself, step by step.</p>
       </div>
       <div class="ac">
         <div class="ac-icon-wrap">
-          <svg width="18" height="16" viewBox="0 0 18 16" fill="none"><rect x="1" y="10" width="4" height="5" rx="1" fill="currentColor"/><rect x="7" y="6" width="4" height="9" rx="1" fill="currentColor"/><rect x="13" y="1" width="4" height="14" rx="1" fill="currentColor"/></svg>
+          <svg width="16" height="14" viewBox="0 0 16 14" fill="none"><rect x="1" y="9" width="3" height="4" rx="1" fill="currentColor"/><rect x="6" y="5" width="3" height="8" rx="1" fill="currentColor"/><rect x="11" y="1" width="4" height="12" rx="1" fill="currentColor"/></svg>
         </div>
         <strong>Built on real research</strong>
         <p>Every recommendation is grounded in CFPB data, FDCPA law, and peer-reviewed behavioral finance research — not generic advice.</p>
       </div>
     </div>
-    <div class="page-cta">
-      <p>Ready to see what's possible?</p>
-      <button class="btn-primary" onclick="startApp()">Get my free snapshot →</button>
+    <div class="features">
+      <div class="feature"><div class="f-num">01</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
+      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer 5 quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
+      <div class="feature"><div class="f-num">03</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
+    </div>
+    <div class="trust-bar">
+      <span>Built on CFPB research</span><span class="dot">·</span>
+      <span>FDCPA-informed guidance</span><span class="dot">·</span>
+      <span>We never sell your data</span><span class="dot">·</span>
+      <span>Not legal advice</span>
+    </div>
+    <div class="page-cta" style="margin-top:32px">
+      <button class="btn-primary red" onclick="startApp()">Get my free snapshot →</button>
     </div>
   </div>
 </div>
 
-<!-- ══ PROCESS ══════════════════════════════════════ -->
-<div class="page" id="page-process">
+<!-- ══ PROCESS PAGE ══════════════════════════════════ -->
+<div class="page active" id="page-process">
   <div class="process-hero">
     <div class="eyebrow">How DebtSnap works</div>
     <h1>A clear path forward.<br><em>In about 3 minutes.</em></h1>
-    <p class="hero-sub">No financial jargon. No pressure. Just an honest look at where you are — and a realistic plan for where you're going.</p>
+    <p class="landing-sub">No financial jargon. No pressure. Just an honest look at where you are — and a realistic plan for where you're going.</p>
   </div>
   <div class="process-steps">
     <div class="proc-step">
@@ -133,10 +148,10 @@
       <div class="proc-right">
         <div class="eyebrow sm">Step one</div>
         <h3>Tell us about your debts</h3>
-        <p>Enter your accounts — credit cards, student loans, medical bills — with approximate balances and their current status. Rough numbers are fine. We're getting a picture, not auditing you.</p>
-        <p>You'll also share basics about your monthly income, expenses, employment, and household size. These let us understand what's actually realistic for you.</p>
+        <p>Enter your accounts — credit cards, student loans, medical bills — with approximate balances and where each stands. Rough numbers are fine. We're getting a picture, not auditing you.</p>
+        <p>You'll also share basics about your monthly income, expenses, employment, and household size so we can understand what's actually realistic for you.</p>
         <div class="proc-note">
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none"><rect x="1" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="13" height="15" viewBox="0 0 13 15" fill="none"><rect x="1" y="7" width="11" height="7" rx="1.5" stroke="currentColor" stroke-width="1.4"/><path d="M3.5 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
           This information is used only to generate your plan. It is never stored or shared.
         </div>
       </div>
@@ -146,8 +161,8 @@
       <div class="proc-right">
         <div class="eyebrow sm">Step two</div>
         <h3>Answer 5 questions about yourself</h3>
-        <p>Five short questions — not about your finances, but about how you relate to them. Do you know exactly what you owe? Have you been avoiding creditor calls? How do you feel when you think about your debt?</p>
-        <div class="proc-callout"><strong>Why does this matter?</strong> Research from nearly 400,000 real debt cases shows that people respond very differently based on their behavior patterns. The same advice doesn't work for everyone. Your plan is calibrated to yours.</div>
+        <p>Five short questions — not about your finances, but about how you relate to them. Do you know exactly what you owe? Have you been avoiding creditor calls?</p>
+        <div class="proc-callout"><strong>Why does this matter?</strong> Research from nearly 400,000 real debt cases shows people respond very differently based on their behavior patterns. The same advice doesn't work for everyone. Your plan is calibrated to yours.</div>
       </div>
     </div>
     <div class="proc-step">
@@ -159,22 +174,24 @@
         <div class="proc-examples">
           <div class="pe-label">Examples of what your plan might include:</div>
           <div class="pe-item">Checking if you qualify for a $0/month student loan payment under federal income-driven repayment</div>
-          <div class="pe-item">Sending a formal debt validation letter to stop collection calls — legally</div>
+          <div class="pe-item">Sending a formal debt validation letter to stop collection calls — legally, at no cost</div>
           <div class="pe-item">Screening for Public Service Loan Forgiveness if you work in public service or for a nonprofit</div>
-          <div class="pe-item">Knowing exactly when the statute of limitations expires on a debt in your state</div>
+          <div class="pe-item">Knowing exactly when the statute of limitations expires on a specific debt in your state</div>
         </div>
       </div>
     </div>
     <div class="proc-step proc-last">
       <div class="proc-left"><div class="proc-num">04</div></div>
       <div class="proc-right">
-        <div class="eyebrow sm">Optional — go deeper</div>
-        <h3>Get your full report</h3>
-        <p>Your free snapshot covers your top three priority actions. For the complete picture — all five steps, negotiation scripts, dispute letter templates, and a full creditor-by-creditor guide — get your full report.</p>
+        <div class="eyebrow sm">Optional — get the full picture</div>
+        <h3>Your full report — then ongoing support</h3>
+        <p>Your free snapshot covers your top three priority actions. For the complete picture — all five steps, negotiation scripts, dispute letter templates, and a full creditor guide — get your full report for $49 once-off.</p>
+        <p>From there, you can choose ongoing month-to-month support at $39/month: coaching, motivation, updated guidance, call scripts, letter templates, and check-ins timed to your situation.</p>
         <div class="price-compare">
           <div class="pc-row"><span>Traditional debt agency</span><span class="bad">15–25% of total debt</span></div>
-          <div class="pc-row"><span>DebtSnap full report (one-time)</span><span class="good">$49</span></div>
-          <div class="pc-row"><span>DebtSnap full report + ongoing</span><span class="good">$39/month</span></div>
+          <div class="pc-row"><span>DebtSnap free snapshot</span><span class="good">$0</span></div>
+          <div class="pc-row"><span>DebtSnap full report</span><span class="good">$49 once-off</span></div>
+          <div class="pc-row"><span>Ongoing support (after report)</span><span class="good">$39/month</span></div>
         </div>
       </div>
     </div>
@@ -182,17 +199,18 @@
   <div class="faq-section">
     <h2>Common questions</h2>
     <div class="faq-list">
-      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Is my financial information safe? <span>+</span></div><div class="faq-a">Yes. Nothing you enter is stored on our servers or shared with anyone. It's used only to generate your plan in this session. Close the browser and it's gone. We know trust is everything in this space.</div></div>
-      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Is this legal advice? <span>+</span></div><div class="faq-a">No. DebtSnap provides financial information and education — not legal advice. Our guidance is based on publicly available consumer protection laws. For complex situations, we'll tell you when to consult a consumer attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you.</div></div>
+      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Is my financial information safe? <span>+</span></div><div class="faq-a">Yes. Nothing you enter is stored on our servers or shared with anyone. It's used only to generate your plan in this session. Close the browser and it's gone.</div></div>
+      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Is this legal advice? <span>+</span></div><div class="faq-a">No. DebtSnap provides financial information and education — not legal advice. Our guidance is based on publicly available consumer protection laws. For complex situations, we'll tell you when a consumer attorney makes sense. Many work on contingency for FDCPA violations, meaning no upfront cost to you.</div></div>
       <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Will this hurt my credit score? <span>+</span></div><div class="faq-a">No. DebtSnap doesn't pull your credit report and doesn't report anything to credit bureaus. Zero impact on your credit score.</div></div>
       <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">What if I'm already being contacted by collectors? <span>+</span></div><div class="faq-a">That's when DebtSnap is most useful. You have significant legal rights under the Fair Debt Collection Practices Act that most people don't know about. Your plan will cover exactly what those rights are and how to use them.</div></div>
-      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">What exactly do I get with the $49 report vs. the $39/month plan? <span>+</span></div><div class="faq-a">The $49 report is a one-time purchase: your complete 5-step personalized plan, all dispute and negotiation letter templates, and a creditor-by-creditor guide. The $39/month subscription adds ongoing check-ins, updated guidance as your situation changes, and full access to the playbook library. You can start with the report and upgrade later at any time.</div></div>
+      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">What's the difference between the $49 report and the $39/month support? <span>+</span></div><div class="faq-a">The $49 report is a one-time purchase: your complete 5-step plan, all dispute and negotiation letter templates, and a creditor-by-creditor guide. It's yours to keep permanently. The $39/month support is a separate, optional add-on that follows: ongoing coaching, call scripts, motivation check-ins, updated guidance as your situation evolves, and access to the full playbook library. You can get the report first and add support later at any time.</div></div>
+      <div class="faq"><div class="faq-q" onclick="toggleFaq(this)">Is AnnualCreditReport.com safe to use? <span>+</span></div><div class="faq-a">Yes — it's the official, federally-authorized source. The FTC and CFPB both endorse it as the only authorized site for your free annual credit reports. It's operated jointly by Equifax, Experian, and TransUnion. You're entitled to one free report from each bureau per year, and since 2020 all three have offered free weekly reports as well.</div></div>
     </div>
   </div>
   <div class="page-cta centered">
     <h2>Ready to see your plan?</h2>
     <p>Takes about 3 minutes. Completely free to start.</p>
-    <button class="btn-primary" onclick="startApp()">Get my free snapshot →</button>
+    <button class="btn-primary red" onclick="startApp()">Get my free snapshot →</button>
   </div>
 </div>
 
@@ -200,24 +218,30 @@
 <div class="page" id="page-s1">
   <div class="preamble">
     <div class="preamble-inner">
-      <h2>Before we start — a note on privacy</h2>
-      <p>We're about to ask for some financial information. We know that's personal. Here's our commitment: <strong>nothing you enter is stored on our servers or shared with anyone.</strong> It's used only to generate your plan, right now, in this session.</p>
-      <p>Rough estimates are completely fine — no need to look anything up.</p>
+      <div class="preamble-header">
+        <div class="preamble-lock">
+          <svg width="16" height="18" viewBox="0 0 16 18" fill="none"><rect x="1" y="8" width="14" height="9" rx="2" stroke="currentColor" stroke-width="1.5"/><path d="M4 8V5.5a4 4 0 0 1 8 0V8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+        <div>
+          <h2>A note on privacy before we start</h2>
+          <p>We're about to ask for some financial information. <strong>Nothing you enter here is stored on our servers or shared with anyone.</strong> It's used only to generate your plan, right now, in this session. Rough estimates are completely fine.</p>
+        </div>
+      </div>
       <div class="preamble-badges">
         <span class="pbadge">
-          <svg width="12" height="14" viewBox="0 0 12 14" fill="none"><rect x="1" y="6" width="10" height="7" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M3 6V4a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="11" height="13" viewBox="0 0 11 13" fill="none"><rect x="0.75" y="5.75" width="9.5" height="6.5" rx="1.25" stroke="currentColor" stroke-width="1.3"/><path d="M3 5.75V4A2.5 2.5 0 0 1 8 4v1.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Not stored
         </span>
         <span class="pbadge">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" stroke="currentColor" stroke-width="1.5"/><path d="M4 4l6 6M10 4l-6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5.25" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 3.5l5 5M8.5 3.5l-5 5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
           Never sold
         </span>
         <span class="pbadge">
-          <svg width="14" height="12" viewBox="0 0 14 12" fill="none"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           No credit check
         </span>
         <span class="pbadge">
-          <svg width="14" height="12" viewBox="0 0 14 12" fill="none"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5 6.5-7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
           No account needed
         </span>
       </div>
@@ -237,7 +261,7 @@
   </div>
   <div class="income-section">
     <h3>Your monthly finances</h3>
-    <p class="section-sub">These numbers help us understand what's realistic for you — not just theoretically possible.</p>
+    <p class="section-sub">These help us understand what's realistic for you — not just theoretically possible.</p>
     <div class="two-col">
       <div class="field">
         <label>Monthly take-home income</label>
@@ -280,7 +304,7 @@
   </div>
 </div>
 
-<!-- ══ STEP 2: QUIZ ═════════════════════════════════ -->
+<!-- ══ STEP 2: QUIZ ══════════════════════════════════ -->
 <div class="page" id="page-s2">
   <div class="step-header">
     <div class="step-lbl">Step 2 of 3</div>
@@ -300,8 +324,8 @@
   <div class="loading-wrap">
     <div class="load-illo">
       <svg viewBox="0 0 120 120" fill="none">
-        <circle cx="60" cy="60" r="48" stroke="#F4DADA" stroke-width="1.5" stroke-dasharray="5 4"/>
-        <circle class="spin-ring" cx="60" cy="60" r="32" stroke="#8B1A1A" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="72 130"/>
+        <circle cx="60" cy="60" r="48" stroke="#EDE5DA" stroke-width="1.5" stroke-dasharray="5 4"/>
+        <circle class="spin-ring" cx="60" cy="60" r="32" stroke="#5C3D2E" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="72 130"/>
         <circle cx="60" cy="60" r="7" fill="#1E110A"/>
         <line x1="60" y1="24" x2="60" y2="32" stroke="#1E110A" stroke-width="2" stroke-linecap="round"/>
         <line x1="60" y1="88" x2="60" y2="96" stroke="#1E110A" stroke-width="2" stroke-linecap="round"/>
@@ -317,7 +341,7 @@
 <!-- ══ RESULTS ══════════════════════════════════════ -->
 <div class="page" id="page-s3">
   <div class="results-hdr">
-    <div class="eyebrow">Your debt snapshot · 3 free steps</div>
+    <div class="eyebrow">Your debt snapshot · 3 free priority steps</div>
     <h2 id="results-headline">Your personalized action plan</h2>
   </div>
   <div class="metrics-row" id="metrics-row"></div>
@@ -330,38 +354,71 @@
   </div>
   <div class="upgrade-wall">
     <div class="uw-lock">
-      <svg width="22" height="24" viewBox="0 0 22 24" fill="none"><rect x="3" y="11" width="16" height="12" rx="2" stroke="currentColor" stroke-width="1.8"/><path d="M7 11V7a4 4 0 0 1 8 0v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      <svg width="20" height="22" viewBox="0 0 20 22" fill="none"><rect x="2" y="10" width="16" height="11" rx="2" stroke="currentColor" stroke-width="1.6"/><path d="M6 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
     </div>
     <div class="uw-title">Get your full debt relief report</div>
-    <div class="uw-desc">All 5 priority steps, negotiation scripts, dispute letter templates, and a step-by-step guide matched to your exact profile and situation.</div>
-    <button class="btn-primary uw-btn" onclick="showPage('trial')">Get the full report — $49 one-time →</button>
-    <p class="uw-sub-opt">Or <button class="uw-sub-link" onclick="showPage('trial')">subscribe at $39/month</button> for ongoing guidance, updates, and tools</p>
-    <p class="uw-note">No percentage of your debt · Cancel anytime</p>
+    <div class="uw-desc">All 5 priority steps, negotiation scripts, dispute letter templates, and a step-by-step guide matched to your exact profile — $49 once-off.</div>
+    <button class="btn-primary uw-btn red" onclick="showPage('trial')">Get the full report — $49 →</button>
+    <p class="uw-sub-opt">Add ongoing support at <button class="uw-sub-link" onclick="showPage('trial')">$39/month</button> after your report — coaching, call scripts, check-ins, letter templates.</p>
   </div>
   <button class="btn-ghost restart-btn" onclick="resetApp()">← Start over</button>
 </div>
 
-<!-- ══ TRIAL / SIGNUP ═══════════════════════════════ -->
+<!-- ══ TRIAL / SIGNUP ════════════════════════════════ -->
 <div class="page" id="page-trial">
   <div class="trial-wrap">
     <button class="btn-ghost" onclick="showPage('s3')" style="margin-bottom:1.5rem">← Back to my plan</button>
-    <div class="trial-badge-wrap"><span class="trial-badge">14-day free trial</span></div>
-    <h2 class="trial-title">Your full debt relief report</h2>
-    <p class="trial-sub">One-time purchase — or subscribe for ongoing guidance.</p>
-    <div class="trial-pricing">
-      <strong>$49 one-time</strong> — Full report, all 5 steps, all templates. Yours to keep.<br>
-      <strong>$39/month</strong> — Everything in the report plus ongoing check-ins, updated guidance, and full playbook access. Start with a 14-day free trial.
+    <h2 class="trial-title">Get your full debt relief report</h2>
+    <p class="trial-sub">Choose what works for you — the report alone, or the report plus ongoing support.</p>
+
+    <!-- Styled plan selector cards — no system select -->
+    <div class="plan-cards" id="plan-cards">
+      <div class="plan-card selected" data-plan="report" onclick="selectPlan(this)">
+        <div class="plan-card-radio"></div>
+        <div class="plan-card-header">
+          <div class="plan-card-name">Full report</div>
+          <div class="plan-card-price">$49 <small>once-off · yours to keep</small></div>
+        </div>
+        <div class="plan-card-desc">Your complete 5-step action plan, all dispute and negotiation letter templates, and a creditor-by-creditor guide. One payment. No subscription.</div>
+      </div>
+      <div class="plan-card" data-plan="sub" onclick="selectPlan(this)">
+        <div class="plan-card-radio"></div>
+        <div class="plan-card-header">
+          <div class="plan-card-name">Full report + ongoing support</div>
+          <div class="plan-card-price">$49 + $39<small>/month thereafter · cancel anytime</small></div>
+        </div>
+        <div class="plan-card-desc">Everything in the report, plus monthly coaching, call scripts, motivation check-ins, updated letter templates, and guidance as your situation evolves.</div>
+      </div>
     </div>
+
     <div class="trial-includes">
-      <div class="ti-label">Everything included:</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> All 5 personalized priority steps</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Negotiation scripts matched to your profile</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Dispute and validation letter templates (pre-filled)</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Creditor hardship program guide by category</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> IDR enrollment walkthrough (if applicable)</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> State-specific statute of limitations reference</div>
-      <div class="ti-item"><span class="ti-ck"><svg width="14" height="12" viewBox="0 0 14 12" fill="none" style="flex-shrink:0;margin-top:2px"><path d="M1 6l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span> Subscription: weekly check-ins timed to your profile</div>
+      <div class="ti-label">Everything included in the report:</div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        All 5 personalized priority steps
+      </div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Negotiation scripts matched to your profile
+      </div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Dispute and validation letter templates (pre-filled)
+      </div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Creditor hardship program guide by category
+      </div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        IDR enrollment walkthrough (federal loans)
+      </div>
+      <div class="ti-item">
+        <svg class="ti-ck" width="14" height="11" viewBox="0 0 14 11" fill="none"><path d="M1 5.5l4 4 8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        State statute of limitations reference
+      </div>
     </div>
+
     <div class="trial-form">
       <div class="tf-field">
         <label>Email address</label>
@@ -378,25 +435,19 @@
         <div class="tf-error" id="pw2-err">Passwords do not match.</div>
       </div>
       <div class="tf-privacy">
-        <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style="flex-shrink:0;margin-top:1px"><rect x="1" y="7" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M4 7V5a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <svg width="13" height="15" viewBox="0 0 13 15" fill="none" style="flex-shrink:0;margin-top:1px"><rect x="0.75" y="6.75" width="11.5" height="7.5" rx="1.5" stroke="currentColor" stroke-width="1.3"/><path d="M3.5 6.75V5A3 3 0 0 1 9.5 5v1.75" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/></svg>
         We never sell or share your information. Your financial data from this session is never stored on our servers.
       </div>
-      <div class="tf-field" style="margin-top:4px">
-        <label>Select plan</label>
-        <select id="trial-plan">
-          <option value="report">$49 one-time — Full report (no subscription)</option>
-          <option value="sub">$39/month — Full report + ongoing (14 days free)</option>
-        </select>
-      </div>
-      <button class="btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:15px;margin-top:14px" onclick="handleTrialSignup()">Continue →</button>
+      <button class="btn-primary red" style="width:100%;justify-content:center;padding:14px;font-size:15px;margin-top:2px" onclick="handleTrialSignup()">Continue →</button>
       <p class="tf-terms">By continuing you agree to our <a href="#" onclick="return false">Terms</a> and <a href="#" onclick="return false">Privacy Policy</a>.</p>
     </div>
+
     <div class="trial-compare">
       <div class="tc-head"><span></span><span>Traditional agency</span><span>DebtSnap</span></div>
-      <div class="tc-row"><span>Cost</span><span class="bad">15–25% of debt</span><span class="good">$49 or $39/mo</span></div>
-      <div class="tc-row"><span>Personalized</span><span class="bad">Generic</span><span class="good">Your profile</span></div>
+      <div class="tc-row"><span>Cost</span><span class="bad">15–25% of debt</span><span class="good">$49 report</span></div>
+      <div class="tc-row"><span>Ongoing support</span><span class="bad">Included in %</span><span class="good">$39/mo optional</span></div>
       <div class="tc-row"><span>You stay in control</span><span class="bad">They negotiate</span><span class="good">You negotiate</span></div>
-      <div class="tc-row"><span>Free to try</span><span class="bad">Usually not</span><span class="good">14 days free</span></div>
+      <div class="tc-row"><span>Cancellable</span><span class="bad">Contracts common</span><span class="good">Anytime</span></div>
     </div>
   </div>
 </div>
@@ -405,18 +456,18 @@
 <div class="page" id="page-confirm">
   <div class="confirm-wrap">
     <div class="confirm-icon-wrap">
-      <svg class="check-svg" viewBox="0 0 28 28" fill="none">
-        <path d="M5 14l7 7 11-11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <path d="M4 13l7 7 11-11" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
     <h2>You're in.</h2>
     <div class="confirm-email-sent">
       <strong>Confirmation email sent</strong>
-      Check your inbox at <span id="confirm-email-display">your email</span> — we've sent a link to complete your account setup.
+      Check your inbox at <strong id="confirm-email-display">your email</strong> — we've sent a link to complete your account setup and access your report any time.
     </div>
-    <p>Your full report is ready now. You can access it below, and we'll also send you a link to return to it at any time.</p>
-    <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:8px">
-      <button class="btn-primary" onclick="showPage('report')">View my full report →</button>
+    <p>Your full report is ready now.</p>
+    <div class="confirm-actions">
+      <button class="btn-primary red" onclick="goToReport()">View my full report →</button>
       <button class="btn-secondary" onclick="downloadReport()">Download PDF</button>
     </div>
   </div>
@@ -429,41 +480,35 @@
       <h1>Your Debt Relief Report</h1>
       <p id="report-subtitle">Personalized plan · Generated <span id="report-date"></span></p>
     </div>
-
     <div class="report-section">
       <div class="report-section-title">Your debt picture</div>
-      <div class="report-section-sub">A complete view of your accounts and key financial ratios.</div>
+      <div class="report-section-sub">A complete view of your accounts and key financial indicators.</div>
       <div class="report-metric-row" id="report-metrics"></div>
-      <table class="report-debt-table" id="report-debt-table">
+      <table class="report-debt-table">
         <thead><tr><th>Account type</th><th>Balance</th><th>Status</th></tr></thead>
         <tbody id="report-debt-rows"></tbody>
       </table>
     </div>
-
     <div class="report-section">
       <div class="report-section-title">Your financial profile</div>
       <div class="report-section-sub">Based on your answers to the 5-question assessment.</div>
       <div class="report-profile-wrap" id="report-profile-wrap"></div>
     </div>
-
     <div class="report-section">
       <div class="report-section-title">Your complete action plan</div>
       <div class="report-section-sub">All 5 priority steps, in order of impact for your situation.</div>
       <div id="report-actions"></div>
     </div>
-
     <div class="report-section">
       <div class="report-section-title">Your rights as a debtor</div>
-      <div class="report-section-sub">Key protections under the FDCPA and consumer law that apply to your situation.</div>
+      <div class="report-section-sub">Key legal protections that apply to your situation.</div>
       <div id="report-rights"></div>
     </div>
-
     <div class="report-disclaimer">
-      This report is for educational and informational purposes only. It does not constitute legal or financial advice. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you.
+      This report is for educational and informational purposes only. It does not constitute legal or financial advice. For complex legal situations, consult a licensed consumer law attorney.
     </div>
-
     <div class="report-actions-bar">
-      <button class="btn-primary" onclick="downloadReport()">Download PDF</button>
+      <button class="btn-primary red" onclick="downloadReport()">Download PDF</button>
       <button class="btn-secondary" onclick="showPage('s3')">← Back to snapshot</button>
       <button class="btn-ghost" onclick="showPage('home')" style="margin-left:auto">Home</button>
     </div>
