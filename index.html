@@ -16,24 +16,11 @@
     <!-- Snapping fingers logo -->
     <button class="logo" onclick="showPage('home')">
       <span class="logo-mark">
-        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Thumb — curved base -->
-          <path d="M9 18 C9 21.5 11.5 24 15 24 C18.5 24 21 21.5 21 18 L21 14" stroke="#1E110A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <!-- Palm sides -->
-          <path d="M9 18 L9 15" stroke="#1E110A" stroke-width="1.8" stroke-linecap="round"/>
-          <!-- Ring finger -->
-          <path d="M21 14 L21 10 C21 9 21.8 8.2 22.8 8.2 C23.8 8.2 24.5 9 24.5 10 L24.5 17" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
-          <!-- Middle finger — the snapping one, slightly raised/bent -->
-          <path d="M18 14 L18 8.5 C18 7.5 18.8 6.8 19.8 6.8 C20.8 6.8 21.5 7.5 21.5 8.5 L21.5 10" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
-          <!-- Index finger -->
-          <path d="M15 14 L15 9 C15 8 15.8 7.2 16.8 7.2 C17.8 7.2 18.5 8 18.5 9 L18.5 8.8" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
-          <!-- Thumb pad pressing against middle finger (pre-snap position) -->
-          <path d="M9 15 C10 13.5 12 13 14 13.5 L15 14" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
-          <!-- Snap energy lines — red, radiating up-right -->
-          <line x1="22" y1="6" x2="23.5" y2="4" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="25" y1="7.5" x2="27" y2="6.5" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="25.5" y1="11" x2="28" y2="10.5" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
-          <line x1="23.5" y1="4.5" x2="26" y2="3" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
+        <svg width="22" height="30" viewBox="0 0 22 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g transform="rotate(-12, 11, 15)">
+            <rect x="7" y="1" width="8" height="17" rx="4" fill="#8B1A1A"/>
+            <rect x="7" y="23" width="8" height="7" rx="3.5" fill="#8B1A1A"/>
+          </g>
         </svg>
       </span>
       DebtSnap
@@ -487,27 +474,38 @@
     </div>
     <div class="report-section">
       <div class="report-section-title">Your debt picture</div>
-      <div class="report-section-sub">A complete view of your accounts and key financial indicators.</div>
+      <div class="report-section-sub">Your accounts, balances, and where you stand — with context.</div>
       <div class="report-metric-row" id="report-metrics"></div>
-      <table class="report-debt-table">
+      <div id="report-dti-context"></div>
+      <table class="report-debt-table" style="margin-top:16px">
         <thead><tr><th>Account type</th><th>Balance</th><th>Status</th></tr></thead>
         <tbody id="report-debt-rows"></tbody>
       </table>
+      <div id="report-disp-context" style="margin-top:12px"></div>
     </div>
+
     <div class="report-section">
       <div class="report-section-title">Your financial profile</div>
-      <div class="report-section-sub">Based on your answers to the 5-question assessment.</div>
-      <div class="report-profile-wrap" id="report-profile-wrap"></div>
+      <div class="report-section-sub">What your assessment results mean — and how they shape your plan.</div>
+      <div id="report-profile-wrap"></div>
     </div>
+
     <div class="report-section">
       <div class="report-section-title">Your complete action plan</div>
-      <div class="report-section-sub">All 5 priority steps, in order of impact for your situation.</div>
+      <div class="report-section-sub">All 5 priority steps with guidance on what to do, what to say, and what to expect.</div>
       <div id="report-actions"></div>
     </div>
+
     <div class="report-section">
-      <div class="report-section-title">Your rights as a debtor</div>
-      <div class="report-section-sub">Key legal protections that apply to your situation.</div>
+      <div class="report-section-title">Your legal rights</div>
+      <div class="report-section-sub">Federal consumer protection laws that apply directly to your situation — with specific actions.</div>
       <div id="report-rights"></div>
+    </div>
+
+    <div class="report-section" style="background:var(--offwhite);padding-bottom:32px">
+      <div class="report-section-title">What comes next</div>
+      <div class="report-section-sub">Your report covers the foundations. Ongoing support covers the execution.</div>
+      <div id="report-next"></div>
     </div>
     <div class="report-disclaimer">
       This report is for educational and informational purposes only. It does not constitute legal or financial advice. For complex legal situations, consult a licensed consumer law attorney.
