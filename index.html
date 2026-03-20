@@ -22,8 +22,7 @@
             <rect x="7" y="23" width="8" height="7" rx="3.5" fill="#8B1A1A"/>
           </g>
         </svg>
-      </span>
-      DebtSnap
+      </span><span class="logo-wordmark">DebtSnap</span>
     </button>
     <nav class="header-nav">
       <button class="nav-link" onclick="showPage('home')">About</button>
@@ -112,7 +111,7 @@
     </div>
     <div class="features">
       <div class="feature"><div class="f-num">01</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
-      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer 5 quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
+      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer 6 quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
       <div class="feature"><div class="f-num">03</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
     </div>
     <div class="trust-bar">
@@ -300,7 +299,7 @@
 <div class="page" id="page-s2">
   <div class="step-header">
     <div class="step-lbl">Step 2 of 3</div>
-    <h2>5 quick questions</h2>
+    <h2>6 quick questions</h2>
     <p class="step-sub">These aren't about your finances — they're about how you relate to them. Honest answers give you a better plan. There are no wrong answers.</p>
   </div>
   <div id="quiz-container"></div>
@@ -337,7 +336,7 @@
     <h2 id="results-headline">Your personalized action plan</h2>
   </div>
   <div class="metrics-row" id="metrics-row"></div>
-  <div class="profile-card" id="profile-card"></div>
+  <div class="profile-card-wrap" id="profile-card"></div>
   <div class="profile-explainer" id="profile-explainer"></div>
   <div class="divider-line"></div>
   <div class="actions-section">
@@ -474,37 +473,45 @@
     </div>
     <div class="report-section">
       <div class="report-section-title">Your debt picture</div>
-      <div class="report-section-sub">Your accounts, balances, and where you stand — with context.</div>
+      <div class="report-section-sub">Balances, interest costs, payoff timelines, and what the numbers mean for you.</div>
       <div class="report-metric-row" id="report-metrics"></div>
-      <div id="report-dti-context"></div>
       <table class="report-debt-table" style="margin-top:16px">
-        <thead><tr><th>Account type</th><th>Balance</th><th>Status</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Account type</th>
+            <th>Balance</th>
+            <th>Rate</th>
+            <th>Min. payment</th>
+            <th>Status</th>
+            <th>Payoff (min only)</th>
+          </tr>
+        </thead>
         <tbody id="report-debt-rows"></tbody>
       </table>
-      <div id="report-disp-context" style="margin-top:12px"></div>
+      <div id="report-context-boxes" style="margin-top:14px"></div>
     </div>
 
     <div class="report-section">
       <div class="report-section-title">Your financial profile</div>
-      <div class="report-section-sub">What your assessment results mean — and how they shape your plan.</div>
+      <div class="report-section-sub">What your assessment reveals — and how it shapes every recommendation.</div>
       <div id="report-profile-wrap"></div>
     </div>
 
     <div class="report-section">
       <div class="report-section-title">Your complete action plan</div>
-      <div class="report-section-sub">All 5 priority steps with guidance on what to do, what to say, and what to expect.</div>
+      <div class="report-section-sub">All 5 priority steps — with what to say, what to expect, and what to do before each one.</div>
       <div id="report-actions"></div>
     </div>
 
     <div class="report-section">
       <div class="report-section-title">Your legal rights</div>
-      <div class="report-section-sub">Federal consumer protection laws that apply directly to your situation — with specific actions.</div>
+      <div class="report-section-sub">Federal consumer protection laws that apply directly to your accounts — with specific steps to take.</div>
       <div id="report-rights"></div>
     </div>
 
-    <div class="report-section" style="background:var(--offwhite);padding-bottom:32px">
+    <div class="report-section report-section-next">
       <div class="report-section-title">What comes next</div>
-      <div class="report-section-sub">Your report covers the foundations. Ongoing support covers the execution.</div>
+      <div class="report-section-sub">Your report is the foundation. Execution is what changes the numbers.</div>
       <div id="report-next"></div>
     </div>
     <div class="report-disclaimer">

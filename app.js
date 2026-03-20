@@ -53,6 +53,16 @@ const QUIZ = [
   },
   {
     id: 'q5',
+    text: 'Have you previously tried to negotiate, settle, or get help with any of this debt?',
+    opts: [
+      'Yes — I contacted creditors directly and it went nowhere',
+      'Yes — I tried a debt relief company and it did not work out',
+      'I looked into it but did not follow through',
+      'No — I have not tried anything yet',
+    ],
+  },
+  {
+    id: 'q6',
     text: 'What is your primary goal right now?',
     opts: [
       'Get the lowest possible monthly payment',
@@ -258,9 +268,24 @@ function addDebt(type = '', balance = '', status = 'current') {
     `<option value="${s.v}"${s.v===status?' selected':''}>${s.l}</option>`).join('');
   el.innerHTML = `<div class="debt-grid">
     <div><label>Debt type</label><select>${tOpts}</select></div>
-    <div><label>Balance</label><input type="number" placeholder="5,000" min="0" value="${balance}" oninput="calcTotal()"></div>
-    <div><label>Status</label><select>${sOpts}</select></div>
+    <div><label>Balance ($)</label><input type="number" class="d-balance" placeholder="5,000" min="0" value="${balance}" oninput="calcTotal()"></div>
+    <div><label>Status</label><select class="d-status">${sOpts}</select></div>
     <button class="remove-btn" onclick="removeDebt('${id}')" aria-label="Remove">×</button>
+  </div>
+  <div class="debt-grid-2">
+    <div>
+      <label>Approximate interest rate</label>
+      <select class="d-rate-band">
+        <option value="">Not sure / don't know</option>
+        <option value="5">Under 10% (e.g. personal loan, low-rate card)</option>
+        <option value="12">10–15% (e.g. credit union, balance transfer)</option>
+        <option value="17">15–20% (e.g. average credit card)</option>
+        <option value="22">20–25% (e.g. store card, high-rate card)</option>
+        <option value="28">Over 25% (e.g. subprime, payday-adjacent)</option>
+        <option value="0">0% (e.g. intro rate, medical payment plan)</option>
+      </select>
+    </div>
+    <div><label>Min. monthly payment ($)</label><input type="number" class="d-minpay" placeholder="150" min="0"></div>
   </div>`;
   document.getElementById('debt-list').appendChild(el);
   calcTotal();
@@ -273,12 +298,20 @@ function removeDebt(id) {
 }
 
 function getDebts() {
-  return Array.from(document.querySelectorAll('.debt-entry')).map(row => ({
-    type:    row.querySelector('select').value,
-    balance: parseFloat(row.querySelector('input[type=number]').value) || 0,
-    status:  row.querySelectorAll('select')[1].value,
-    label:   DEBT_TYPES.find(t => t.v === row.querySelector('select').value)?.l || 'Debt',
-  })).filter(d => d.balance > 0);
+  return Array.from(document.querySelectorAll('.debt-entry')).map(row => {
+    const rateBand = row.querySelector('.d-rate-band')?.value;
+    const rateVal  = rateBand ? parseFloat(rateBand) : null;
+    const bandLabel = row.querySelector('.d-rate-band')?.selectedOptions[0]?.text || '';
+    return {
+      type:      row.querySelector('select').value,
+      balance:   parseFloat(row.querySelector('.d-balance')?.value) || 0,
+      status:    row.querySelector('.d-status')?.value || 'current',
+      rate:      rateVal,
+      rateBand:  bandLabel.split(' (')[0] || '',
+      minPay:    parseFloat(row.querySelector('.d-minpay')?.value) || null,
+      label:     DEBT_TYPES.find(t => t.v === row.querySelector('select').value)?.l || 'Debt',
+    };
+  }).filter(d => d.balance > 0);
 }
 
 function calcTotal() {
@@ -366,7 +399,9 @@ function buildCtx() {
     hasFedStudent: debts.some(d => d.type === 'student-federal'),
     hasPublicNP:   ['public','nonprofit'].includes(employment),
     inCollections: debts.some(d => ['collections','charged-off'].includes(d.status)),
-    goal:          QUIZ[4].opts[quizAnswers.q5 ?? 0],
+    goal:          QUIZ[5].opts[quizAnswers.q6 ?? 0],
+    priorNegotiation: QUIZ[4].opts[quizAnswers.q5 ?? 3],
+    hasTriedBefore: (quizAnswers.q5 ?? 3) < 3,
     generatedAt:   new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' }),
   };
 }
@@ -380,6 +415,8 @@ function buildRulePlan(ctx) {
   const incomeFmt  = fmt(ctx.income);
   const dispFmt    = fmt(Math.abs(ctx.disposable));
   const familySize = parseInt(ctx.family) || 1;
+  const triedBefore = ctx.hasTriedBefore;
+  const triedCompany = ctx.priorNegotiation && ctx.priorNegotiation.includes('debt relief company');
 
   // RULE 1 — Collections / charged-off: FDCPA validation is always first
   const collAccounts = ctx.debts.filter(d => ['collections','charged-off'].includes(d.status));
@@ -498,6 +535,27 @@ function buildRulePlan(ctx) {
       urgent: false,
     },
   ];
+  // If tried before and failed — specific credibility/strategy action
+  if (triedBefore && actions.length < 3) {
+    if (triedCompany) {
+      actions.push({
+        title: 'Understand what went wrong — and what to do differently',
+        body: `Previous debt relief companies often collect fees upfront without resolving accounts, or enroll people in settlement programs that damage credit before delivering any benefit. Your situation now is different: you have specific legal rights, a personalized plan, and the tools to negotiate directly. The approach in this report is fundamentally different from what you experienced.`,
+        impact: 'Direct negotiation typically achieves 40–60% reductions on charged-off accounts',
+        priority: 'medium',
+        urgent: false,
+      });
+    } else {
+      actions.push({
+        title: 'Build your negotiation position before calling again',
+        body: `You have already tried to negotiate directly — which means you know how creditors respond. The difference this time: you have a documented profile, a sequenced plan, and knowledge of your specific legal rights. The validation letter and hardship call scripts in your report are designed to open doors that a general inquiry does not.`,
+        impact: 'Informed negotiation achieves measurably better outcomes',
+        priority: 'medium',
+        urgent: false,
+      });
+    }
+  }
+
   let fi = 0;
   while (actions.length < 3 && fi < fillers.length) actions.push(fillers[fi++]);
 
@@ -613,7 +671,7 @@ function renderResults(ctx, plan) {
     <div class="m-cell"><div class="m-val ${dtiCls}">${ctx.dti!==null?ctx.dti+'%':'—'}</div><div class="m-lbl">Debt-to-income</div></div>
     <div class="m-cell"><div class="m-val ${dspCls}">${fmt(Math.abs(ctx.disposable))}</div><div class="m-lbl">${ctx.disposable>=0?'Monthly surplus':'Monthly shortfall'}</div></div>`;
 
-  document.getElementById('profile-card').innerHTML = `
+  const profileEl = document.getElementById('profile-card'); profileEl.innerHTML = `
     <div class="p-badge">${ctx.info.name.split(' ').slice(-1)[0]}</div>
     <div>
       <div class="p-eyebrow">Your financial profile</div>
@@ -749,135 +807,592 @@ function buildReportPage() {
   if (!currentCtx || !currentPlan) return;
   const ctx  = currentCtx;
   const plan = currentPlan;
+  const info = ctx.info;
 
-  // Metrics
+  document.getElementById('report-date').textContent = ctx.generatedAt;
+
+  // ── Pre-compute analytics ─────────────────────────────────────
+  const totalDebt    = ctx.total;
+  const income       = ctx.income;
+  const expenses     = ctx.expenses;
+  const disposable   = ctx.disposable;
+  const dti          = ctx.dti;
+
+  // Annual interest cost across accounts with known rates
+  const knownRateDebts  = ctx.debts.filter(d => d.rate);
+  const annualInterest  = knownRateDebts.reduce((s, d) => s + d.balance * (d.rate / 100), 0);
+  const monthlyInterest = annualInterest / 12;
+
+  // Total min payments
+  const knownMinDebts   = ctx.debts.filter(d => d.minPay);
+  const totalMinPay     = knownMinDebts.reduce((s, d) => s + d.minPay, 0);
+
+  // Avalanche payoff estimate (rough): with $X above minimums to highest rate
+  const extraMonthly    = Math.max(0, disposable - totalMinPay);
+
+  // Highest interest account
+  const highestRate     = ctx.debts.reduce((best, d) => (!best || (d.rate && d.rate > best.rate)) ? d : best, null);
+
+  // Years to pay off at minimum only (rough: min pay barely covers interest for high-rate debt)
+  function payoffMonths(balance, rate, monthly) {
+    if (!monthly || monthly <= 0 || !rate) return null;
+    const r = rate / 100 / 12;
+    if (r <= 0) return Math.ceil(balance / monthly);
+    if (monthly <= balance * r) return null; // never pays off
+    return Math.ceil(-Math.log(1 - (balance * r / monthly)) / Math.log(1 + r));
+  }
+
+  const statusMap   = { current:'Current', '30':'30 days late', '60':'60 days late', '90':'90+ days late', collections:'In collections', 'charged-off':'Charged off' };
+  const statusClass = { current:'status-current', '30':'status-late', '60':'status-late', '90':'status-late', collections:'status-collections', 'charged-off':'status-collections' };
+
+  // DTI context
+  const dtiRating = !dti ? '' : dti <= 20 ? 'Healthy' : dti <= 36 ? 'Manageable' : dti <= 50 ? 'Elevated' : 'Critical';
+  const dtiColor  = !dti ? '' : dti <= 36 ? 'pos' : dti <= 50 ? 'warn' : 'neg';
+
+  // ── SECTION 1: Debt picture ───────────────────────────────────
   document.getElementById('report-metrics').innerHTML = `
-    <div class="report-metric"><div class="rv">${fmt(ctx.total)}</div><div class="rl">Total debt</div></div>
-    <div class="report-metric"><div class="rv">${ctx.dti!==null?ctx.dti+'%':'—'}</div><div class="rl">Debt-to-income</div></div>
-    <div class="report-metric"><div class="rv ${ctx.disposable>=0?'pos':'neg'}">${fmt(Math.abs(ctx.disposable))}</div><div class="rl">${ctx.disposable>=0?'Monthly surplus':'Monthly shortfall'}</div></div>`;
+    <div class="report-metric">
+      <div class="rv">${fmt(totalDebt)}</div>
+      <div class="rl">Total unsecured debt</div>
+    </div>
+    <div class="report-metric">
+      <div class="rv ${dtiColor}">${dti !== null ? dti + '%' : '—'}</div>
+      <div class="rl">Debt-to-income${dtiRating ? ' · ' + dtiRating : ''}</div>
+    </div>
+    <div class="report-metric">
+      <div class="rv ${disposable >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(disposable))}</div>
+      <div class="rl">${disposable >= 0 ? 'Monthly surplus' : 'Monthly shortfall'}</div>
+    </div>
+    ${annualInterest > 0 ? `<div class="report-metric">
+      <div class="rv neg">${fmt(Math.round(annualInterest))}</div>
+      <div class="rl">Est. annual interest cost</div>
+    </div>` : ''}`;
 
-  // Debt table
-  const statusMap = { current:'current', '30':'late', '60':'late', '90':'late', collections:'collections', 'charged-off':'collections' };
-  const statusLabelMap = { current:'Current', '30':'30 days late', '60':'60 days late', '90':'90+ days late', collections:'In collections', 'charged-off':'Charged off' };
-  document.getElementById('report-debt-rows').innerHTML = ctx.debts.map(d => `
-    <tr>
-      <td>${d.label}</td>
-      <td>${fmt(d.balance)}</td>
-      <td><span class="status-badge status-${statusMap[d.status]||'late'}">${statusLabelMap[d.status]||d.status}</span></td>
-    </tr>`).join('') + `<tr style="border-top:2px solid var(--espresso)">
+  // Debt table with payoff column
+  document.getElementById('report-debt-rows').innerHTML =
+    ctx.debts.map(d => {
+      const mos    = d.rate && d.minPay ? payoffMonths(d.balance, d.rate, d.minPay) : null;
+      const mosStr = mos === null ? '—' : mos > 360 ? '30+ yrs' : mos > 24 ? Math.ceil(mos/12) + ' yrs' : mos + ' mos';
+      return `<tr>
+        <td>${d.label}</td>
+        <td style="font-weight:600">${fmt(d.balance)}</td>
+        <td>${d.rate ? d.rate + '%' : '—'}</td>
+        <td>${d.minPay ? fmt(d.minPay) + '/mo' : '—'}</td>
+        <td><span class="status-badge ${statusClass[d.status]||'status-late'}">${statusMap[d.status]||d.status}</span></td>
+        <td style="color:${mos > 48 || mos === null ? 'var(--red)' : 'var(--stone)'}">${mosStr}</td>
+      </tr>`;
+    }).join('') +
+    `<tr class="report-total-row">
       <td><strong>Total</strong></td>
-      <td><strong>${fmt(ctx.total)}</strong></td>
-      <td></td>
+      <td><strong>${fmt(totalDebt)}</strong></td>
+      <td>${annualInterest > 0 ? fmt(Math.round(annualInterest)) + '/yr' : '—'}</td>
+      <td>${totalMinPay > 0 ? fmt(totalMinPay) + '/mo' : '—'}</td>
+      <td colspan="2"></td>
     </tr>`;
 
-  // Profile
+  // Context callouts
+  const contextBoxes = [];
+
+  if (dti !== null) {
+    const dtiMsg = dti <= 20
+      ? `Your debt-to-income ratio of ${dti}% is healthy. Lenders consider anything under 36% manageable. You have room to address this strategically rather than urgently.`
+      : dti <= 36
+      ? `Your DTI of ${dti}% is within the range lenders consider acceptable, but you are carrying meaningful debt. A structured plan now prevents this from becoming a crisis later.`
+      : dti <= 50
+      ? `A DTI of ${dti}% is above the 36% threshold most lenders flag as a concern. This level of debt relative to income limits your financial flexibility and costs you more each month than it should.`
+      : `A DTI of ${dti}% is in the critical range. At this level, debt is likely consuming a large portion of your income and may feel impossible to escape. That is exactly what a structured plan addresses — and it is more achievable than it feels.`;
+    contextBoxes.push(dtiMsg);
+  }
+
+  if (annualInterest > 0) {
+    contextBoxes.push(`Based on the interest rates you provided, your debt is costing you approximately <strong>${fmt(Math.round(annualInterest))} per year</strong> — or <strong>${fmt(Math.round(monthlyInterest))} every month</strong> — just in interest charges. That is money that reduces your balance by nothing. Eliminating even one high-rate account materially changes this number.`);
+  }
+
+  if (disposable < 0) {
+    contextBoxes.push(`Your monthly expenses exceed your income by ${fmt(Math.abs(disposable))}. Before any accelerated debt payoff is possible, this shortfall needs to be addressed — either through reduced expenses, additional income, or by negotiating lower minimum payments on existing accounts. Your action plan addresses this directly.`);
+  } else if (disposable > 0 && totalMinPay > 0 && disposable > totalMinPay) {
+    const extra = disposable - totalMinPay;
+    contextBoxes.push(`After minimum payments, you have approximately <strong>${fmt(extra)}/month</strong> available. Directed strategically to your highest-interest account, this can significantly accelerate your payoff timeline and reduce total interest paid.`);
+  }
+
+  document.getElementById('report-context-boxes').innerHTML = contextBoxes.map(msg =>
+    `<div class="report-context-box">${msg}</div>`).join('');
+
+  // ── SECTION 2: Profile ────────────────────────────────────────
+  const traitCards = Object.entries(info.traits || {}).map(([letter, label]) => {
+    const t = TRAIT_DEFS[letter];
+    if (!t) return '';
+    return `<div class="report-trait">
+      <div class="report-trait-dim">${t.dim}</div>
+      <div class="report-trait-val">${t.val}</div>
+      <div class="report-trait-desc">${t.desc}</div>
+    </div>`;
+  }).join('');
+
   document.getElementById('report-profile-wrap').innerHTML = `
-    <div class="report-profile-badge">${ctx.info.name.split(' ').slice(-1)[0]}</div>
-    <div>
-      <div class="report-profile-name">${ctx.info.name}</div>
-      <div class="report-profile-desc">${ctx.info.desc}</div>
-      <div style="margin-top:8px;font-size:12px;color:var(--stone)">${ctx.info.guide}</div>
+    <div class="rp-name-device">
+      <div class="rp-code">${ctx.archetype}</div>
+      <div class="rp-name">${info.name}</div>
+    </div>
+    <p class="rp-desc">${info.desc}</p>
+    ${traitCards ? `<div class="report-trait-grid">${traitCards}</div>` : ''}
+    <div class="rp-guide-box">
+      <div class="rp-guide-label">How this shapes your plan</div>
+      <div class="rp-guide-body">${info.guide || 'Your plan is sequenced and toned to match how you respond best to guidance and action prompts.'}</div>
     </div>`;
 
-  // All 5 actions
-  const priLbl = { high:'High priority', medium:'Next step', low:'Also consider' };
-  document.getElementById('report-actions').innerHTML = (plan.actions||[]).map((a,i) => `
-    <div class="report-action${a.urgent?' urgent':''}">
+  // ── SECTION 3: Full action plan ───────────────────────────────
+  const priLbl   = { high:'High priority', medium:'Next step', low:'Also consider' };
+  const whatNext = [
+    {
+      heading: "Before you start",
+      body: "Gather your account numbers and the collector's full mailing address from the collection notice. Send your letter via USPS Certified Mail with Return Receipt Requested — keep the green card when it comes back. The moment they sign for it, the clock starts and all collection activity must legally stop."
+    },
+    {
+      heading: "What to expect",
+      body: "Your servicer must process IDR applications within 30 days. If you are behind on payments, you may be eligible for immediate forbearance while the application is reviewed. Your new payment amount is recalculated each year based on your tax return. If your income drops further, your payment drops too — potentially to $0."
+    },
+    {
+      heading: "What to say on the call",
+      body: "Call the main billing number and say: \"I would like to apply for your financial hardship program.\" Do not say 'I cannot pay' — say 'I am experiencing a temporary hardship and want to find a payment solution.' Ask for the hardship or retention team specifically. Get the agent's name and employee ID, and ask them to email you a written summary of any arrangement before you make a payment."
+    },
+    {
+      heading: "What to prepare first",
+      body: "Pull your free credit reports from AnnualCreditReport.com before contacting any creditor — you need to know exactly what they know. Verify the balance, the account open date, and the date of first delinquency on each account. These dates determine your statute of limitations, which affects your negotiating position significantly."
+    },
+    {
+      heading: "After this step",
+      body: "Once complete, update your debt list with the new balance or status. Every completed step shifts your numbers — your DTI improves, your credit profile changes, and your leverage with remaining creditors increases. Track each win. The subscription coaching layer will prompt you at the right time for each subsequent action."
+    }
+  ];
+
+  document.getElementById('report-actions').innerHTML = (plan.actions||[]).slice(0,5).map((a, i) => {
+    const wn = whatNext[i] || whatNext[4];
+    return `
+    <div class="report-action${a.urgent ? ' urgent' : ''}">
       <div class="report-action-head">
         <div class="report-action-num">${i+1}</div>
-        <div>
-          <div class="pri-tag ${a.urgent?'pri-urgent':(a.priority==='high'?'pri-high':a.priority==='medium'?'pri-medium':'pri-low')}">${a.urgent?'Act now':(priLbl[a.priority]||'Next step')}</div>
+        <div style="flex:1">
+          <span class="pri-tag ${a.urgent ? 'pri-urgent' : a.priority==='high' ? 'pri-high' : a.priority==='medium' ? 'pri-medium' : 'pri-low'}">${a.urgent ? 'Act now' : priLbl[a.priority]||'Next step'}</span>
           <div class="report-action-title">${a.title}</div>
         </div>
       </div>
       <div class="report-action-body">${a.body}</div>
-      ${a.impact?`<div class="report-action-impact">${a.impact}</div>`:''}
-    </div>`).join('');
+      ${a.impact ? `<div class="report-action-impact">${a.impact}</div>` : ''}
+      <div class="report-what-next">
+        <div class="rwn-label">${wn.heading}</div>
+        <div class="rwn-body">${wn.body}</div>
+      </div>
+    </div>`;
+  }).join('');
 
-  // Rights section — dynamic based on situation
+  // ── SECTION 4: Legal rights ───────────────────────────────────
   const rights = [];
-  if (ctx.inCollections) rights.push({ title:'Right to debt validation', body:'Under FDCPA §809(b), you have the right to demand written verification of any debt within 30 days of first collector contact. The collector must stop all collection activity until they verify.' });
-  if (ctx.inCollections) rights.push({ title:'Right to stop contact', body:'Under FDCPA §805(c), you can demand in writing that a collector stop all contact. They may only contact you once more to confirm — then must cease.' });
-  rights.push({ title:'Right to dispute credit report errors', body:'Under FCRA §611, you have the right to dispute any inaccurate information on your credit report. The bureau must investigate within 30 days.' });
-  if (ctx.hasFedStudent) rights.push({ title:'Right to income-driven repayment', body:'All federal student loan borrowers have the right to enroll in at least one income-driven repayment plan, which can reduce payments as low as $0/month based on income.' });
+
+  if (ctx.inCollections) {
+    rights.push({
+      law: 'FDCPA §809(b)',
+      title: 'Right to demand debt validation',
+      body: 'Any debt collector must provide written verification of a debt upon your written request made within 30 days of first contact. Verification must include the name and address of the original creditor, the exact amount owed, and confirmation of their authority to collect. Until they respond, all collection activity — calls, letters, credit reporting — must stop completely.',
+      action: 'Send a certified Debt Validation Letter within 30 days of first collector contact. Do not wait. A template is available with the ongoing support subscription.',
+      urgent: true,
+    });
+    rights.push({
+      law: 'FDCPA §805(c)',
+      title: 'Right to demand all contact cease',
+      body: 'You may send a written cease-and-desist letter demanding the collector stop all contact with you. After receiving it, they may only contact you once more — to confirm they are stopping, or to notify you of a specific legal action such as a lawsuit. Any other contact after your letter is a federal violation worth up to $1,000 in statutory damages per incident, plus attorney fees.',
+      action: 'Send via certified mail. Keep the return receipt. Log every contact that occurs afterward — date, time, method, and content.',
+      urgent: true,
+    });
+    rights.push({
+      law: 'FDCPA §807–808',
+      title: 'Right against deceptive and abusive collection practices',
+      body: 'Collectors are prohibited from: threatening arrest or legal action they do not intend to take; misrepresenting the amount owed; contacting you before 8am or after 9pm; calling your workplace if told not to; using obscene language; or publishing your name as a debtor. Violations are actionable in federal court without needing to prove actual damages.',
+      action: 'Document every violation with date, time, and content. File complaints at consumerfinance.gov/complaint and your state attorney general. Consider consulting a consumer law attorney — many take FDCPA cases on contingency.',
+    });
+  }
+
+  rights.push({
+    law: 'FCRA §611',
+    title: 'Right to dispute and correct your credit report',
+    body: 'You are entitled to a free credit report from each of the three bureaus (Equifax, Experian, TransUnion) at AnnualCreditReport.com — now available weekly. Any information you dispute must be investigated within 30 days. Items that cannot be verified must be removed. Studies consistently show 30–40% of credit reports contain errors — inaccurate balances, wrong account statuses, accounts that do not belong to you.',
+    action: 'Pull all three reports now. Dispute any inaccuracy directly with the bureau in writing. You do not need a credit repair company to do this — it is your legal right and costs nothing.',
+  });
+
+  if (ctx.hasFedStudent) {
+    rights.push({
+      law: 'Higher Education Act §493C',
+      title: 'Right to income-driven repayment on federal loans',
+      body: 'Every federal student loan borrower has a statutory right to enroll in at least one income-driven repayment plan, regardless of credit history, employment status, or how long they have been in repayment. Available plans include SAVE, IBR, PAYE, and ICR. Your monthly payment is calculated as a percentage of your discretionary income — which can be $0 for many borrowers. Any remaining balance after 20–25 years of qualifying payments is forgiven.',
+      action: 'Apply at studentaid.gov or call your servicer. The application takes about 10 minutes. Relief can be retroactive to the beginning of the plan year.',
+    });
+
+    if (ctx.hasPublicNP) {
+      rights.push({
+        law: 'College Cost Reduction Act (PSLF)',
+        title: 'Right to pursue Public Service Loan Forgiveness',
+        body: `Working full-time for a qualifying public service employer — any level of government, or most 501(c)(3) nonprofits — entitles you to apply for PSLF. After 120 qualifying monthly payments under an income-driven repayment plan, your remaining federal loan balance is forgiven entirely, tax-free. Qualifying payments do not need to be consecutive. Payments made under the wrong plan can sometimes be recounted under the limited PSLF waiver.`,
+        action: 'Submit the PSLF employer certification form immediately at studentaid.gov/pslf. Every month you delay is a qualifying payment you are not counting.',
+        urgent: true,
+      });
+    }
+  }
+
+  if (ctx.debts.some(d => d.type === 'medical')) {
+    rights.push({
+      law: 'ACA §501(r) + IRS Rev. Rul. 56-185',
+      title: 'Right to financial assistance on medical debt',
+      body: 'All 501(c)(3) nonprofit hospitals — which includes most major hospital systems in the US — are legally required to have financial assistance (charity care) programs and must make them widely available. They are prohibited from engaging in "extraordinary collection actions," including reporting to credit bureaus, filing lawsuits, or placing liens, without first screening you for financial assistance eligibility. Income thresholds vary by hospital but often reach 200–400% of the federal poverty level.',
+      action: 'Call the billing department and ask specifically for a "financial assistance application" or "charity care form." This is a legal requirement, not a discretionary favour. Ask for their written FAP (Financial Assistance Policy) as well.',
+    });
+  }
 
   document.getElementById('report-rights').innerHTML = rights.map(r => `
-    <div style="padding:12px 0;border-bottom:1px solid var(--offwhite)">
-      <div style="font-size:14px;font-weight:600;margin-bottom:4px;color:var(--red)">${r.title}</div>
-      <div style="font-size:13px;color:var(--stone);line-height:1.6">${r.body}</div>
+    <div class="rights-item${r.urgent ? ' urgent' : ''}">
+      <div class="rights-header">
+        <span class="rights-law">${r.law}</span>
+        ${r.urgent ? '<span class="rights-urgent-tag">Applies to your accounts</span>' : ''}
+      </div>
+      <div class="rights-title">${r.title}</div>
+      <div class="rights-body">${r.body}</div>
+      <div class="rights-action">
+        <svg width="12" height="10" viewBox="0 0 12 10" fill="none"><path d="M1 5l3.5 3.5 6.5-6.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        ${r.action}
+      </div>
     </div>`).join('');
+
+  // ── SECTION 5: What comes next ────────────────────────────────
+  const subItems = [
+    {
+      title: 'Negotiation scripts',
+      body: 'Word-for-word call scripts for hardship programs, settlement offers, creditor disputes, and debt validation follow-ups. Each script is matched to your profile type and the specific type of account — a credit card hardship call reads very differently from a medical billing dispute.',
+    },
+    {
+      title: 'Pre-filled letter templates',
+      body: 'Six production-ready letters — debt validation, debt dispute, cease and desist, goodwill deletion, financial hardship request, and settlement offer. Pre-filled with your account details where possible, with clear guidance on where to send each one and exactly how to send it.',
+    },
+    {
+      title: 'Timed check-ins and nudges',
+      body: `Based on the PAIR research behind your ${info.name} profile, you respond best to ${info.tone === 'cooperative' ? 'calm, supportive prompts that acknowledge your situation without pressure' : info.tone === 'informative' ? 'clear, data-driven updates with specific next steps' : 'mutual-benefit framing that connects action to outcomes'}. Your check-ins are calibrated accordingly — sent at the moments most likely to keep you moving.`,
+    },
+    {
+      title: 'Personal coaching layer',
+      body: 'Ask questions, work through sticking points, and get guidance on specific creditors and situations — from a coaching layer that knows your full debt picture, your profile type, and where you are in the plan. Not generic advice. Contextual guidance for your specific situation.',
+    },
+    {
+      title: 'Playbooks for every scenario',
+      body: 'Step-by-step guides for debt settlement negotiations, medical billing disputes, student loan appeals, credit report repair, statute of limitations strategy, and more. Each playbook is built for people in situations like yours — not theoretical frameworks.',
+    },
+    {
+      title: 'Monthly progress tracking',
+      body: 'A running view of your debt picture as it changes — balances, DTI, credit impact, completed steps. Seeing the numbers move is one of the most powerful motivators for staying on track. Your profile type is updated if your situation changes.',
+    },
+  ];
+
+  document.getElementById('report-next').innerHTML = `
+    <p class="report-next-intro">Your report covers the foundational picture and your first five steps. What comes next — actually executing those steps, handling the responses, navigating the follow-ups — is where most people stall. That is what the ongoing support covers.</p>
+
+    <div class="report-next-grid">
+      ${subItems.map(item => `
+        <div class="rng-item">
+          <div class="rng-title">${item.title}</div>
+          <div class="rng-body">${item.body}</div>
+        </div>`).join('')}
+    </div>
+
+    <div class="report-enroll-card">
+      <div class="rec-eyebrow">Ongoing support</div>
+      <div class="rec-price">$39<span class="rec-per">/month</span></div>
+      <div class="rec-tagline">Cancel anytime. No contracts. No percentage of your debt.</div>
+      <div class="rec-compare">Traditional debt agencies charge 15–25% of your total balance — on ${fmt(totalDebt)}, that is <strong>${fmt(Math.round(totalDebt * 0.20))}</strong> or more. DebtSnap is $39/month.</div>
+      <button class="btn-primary red rec-btn" onclick="showPage('trial')">Enroll in ongoing support →</button>
+      <div class="rec-items">
+        <span>Scripts</span><span>·</span>
+        <span>Templates</span><span>·</span>
+        <span>Coaching</span><span>·</span>
+        <span>Playbooks</span><span>·</span>
+        <span>Check-ins</span><span>·</span>
+        <span>Progress tracking</span>
+      </div>
+    </div>`;
 }
 
+
 // ── PDF DOWNLOAD ─────────────────────────────────────
-function downloadReport() {
+async function downloadReport() {
   if (!currentCtx || !currentPlan) return;
   const ctx  = currentCtx;
   const plan = currentPlan;
 
-  // Build a clean printable HTML page and trigger browser print-to-PDF
-  const html = `<!DOCTYPE html><html><head>
-  <meta charset="UTF-8">
-  <title>DebtSnap Report — ${ctx.generatedAt}</title>
-  <style>
-    body { font-family: Georgia, serif; max-width: 680px; margin: 40px auto; color: #1E110A; font-size: 14px; line-height: 1.6; }
-    h1 { font-size: 28px; margin-bottom: 4px; }
-    h2 { font-size: 18px; margin: 32px 0 8px; border-bottom: 2px solid #8B1A1A; padding-bottom: 6px; color: #8B1A1A; }
-    h3 { font-size: 15px; margin: 16px 0 4px; }
-    .meta { font-size: 12px; color: #8A7A6A; margin-bottom: 32px; }
-    .action { border: 1px solid #ccc; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
-    .action.urgent { border-color: #8B1A1A; }
-    .action-num { display: inline-block; width: 24px; height: 24px; border-radius: 50%; background: #F4DADA; border: 1px solid #8B1A1A; text-align: center; line-height: 22px; font-size: 12px; font-weight: bold; color: #8B1A1A; margin-right: 8px; }
-    .impact { display: inline-block; margin-top: 8px; font-size: 12px; font-weight: bold; padding: 2px 10px; border-radius: 20px; border: 1px solid #8B1A1A; color: #8B1A1A; background: #F4DADA; }
-    .tag { display: inline-block; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: .05em; padding: 2px 7px; border-radius: 3px; background: #1E110A; color: white; margin-bottom: 4px; }
-    .tag.urgent-t { background: #8B1A1A; }
-    table { width: 100%; border-collapse: collapse; font-size: 13px; margin-bottom: 16px; }
-    th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #8A7A6A; border-bottom: 2px solid #1E110A; padding: 6px 0; }
-    td { padding: 8px 0; border-bottom: 1px solid #eee; }
-    .metric-row { display: flex; gap: 20px; margin-bottom: 16px; }
-    .metric { background: #f7f3ee; padding: 12px; border-radius: 6px; flex: 1; text-align: center; }
-    .metric .v { font-size: 22px; font-weight: bold; }
-    .metric .l { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #8A7A6A; }
-    .disclaimer { font-size: 11px; color: #8A7A6A; font-style: italic; margin-top: 32px; padding-top: 16px; border-top: 1px solid #eee; }
-    @media print { body { margin: 20px; } }
-  </style></head><body>
-  <h1>DebtSnap Debt Relief Report</h1>
-  <div class="meta">Generated ${ctx.generatedAt} &nbsp;·&nbsp; Profile: ${ctx.info.name}</div>
+  // Build self-contained printable HTML for the PDF
+  const statusMap = { current:'Current', '30':'30 days late', '60':'60 days late', '90':'90+ days late', collections:'In collections', 'charged-off':'Charged off' };
+  const priLbl    = { high:'High priority', medium:'Next step', low:'Also consider' };
+  const annualInt = ctx.debts.filter(d=>d.rate).reduce((s,d)=>s+d.balance*(d.rate/100),0);
 
-  <h2>Your debt picture</h2>
-  <div class="metric-row">
-    <div class="metric"><div class="v">${fmt(ctx.total)}</div><div class="l">Total debt</div></div>
-    <div class="metric"><div class="v">${ctx.dti!==null?ctx.dti+'%':'—'}</div><div class="l">Debt-to-income</div></div>
-    <div class="metric"><div class="v">${fmt(Math.abs(ctx.disposable))}</div><div class="l">${ctx.disposable>=0?'Monthly surplus':'Monthly shortfall'}</div></div>
+  function payoffMos(bal, rate, monthly) {
+    if (!monthly || !rate) return null;
+    const r = rate/100/12;
+    if (r <= 0) return Math.ceil(bal/monthly);
+    if (monthly <= bal*r) return null;
+    return Math.ceil(-Math.log(1-(bal*r/monthly))/Math.log(1+r));
+  }
+
+  const htmlContent = `<!DOCTYPE html><html lang="en"><head>
+<meta charset="UTF-8">
+<title>DebtSnap Debt Relief Report</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'DM Sans',Georgia,sans-serif;color:#1E110A;font-size:13px;line-height:1.6;background:#fff;padding:0}
+  .page{max-width:720px;margin:0 auto;padding:40px 48px}
+  .cover{background:#1E110A;color:#F7F3EE;padding:48px;margin-bottom:0;break-after:page}
+  .cover-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A7A6A;margin-bottom:16px}
+  .cover h1{font-family:'DM Serif Display',Georgia,serif;font-size:42px;letter-spacing:-0.02em;line-height:1.1;margin-bottom:12px}
+  .cover-sub{font-size:14px;color:#8A7A6A;margin-bottom:32px}
+  .cover-meta{font-size:12px;color:#4A3728;border-top:1px solid #2D2520;padding-top:16px;display:flex;gap:24px}
+  h2{font-family:'DM Serif Display',Georgia,serif;font-size:20px;letter-spacing:-0.01em;color:#1E110A;margin:32px 0 8px;padding-bottom:8px;border-bottom:1.5px solid #1E110A}
+  h3{font-size:14px;font-weight:600;margin:14px 0 5px;color:#1E110A}
+  p{margin-bottom:10px;color:#7A6A58}
+  .metrics{display:flex;gap:12px;margin:16px 0}
+  .metric{flex:1;background:#F7F3EE;border-radius:8px;padding:14px;text-align:center}
+  .metric .v{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:2px}
+  .metric .l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#7A6A58}
+  table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
+  th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7A6A58;padding:6px 0;border-bottom:1.5px solid #1E110A}
+  td{padding:9px 0;border-bottom:1px solid #EDE5DA;vertical-align:top}
+  .context-box{background:#EDE5DA;border-left:2px solid #5C3D2E;padding:10px 13px;border-radius:0 6px 6px 0;margin:10px 0;font-size:12px;color:#5C3D2E;line-height:1.65}
+  .profile-device{display:flex;align-items:center;gap:14px;border:1.5px solid #1E110A;border-radius:10px;padding:14px 18px;margin:12px 0}
+  .pcode{font-family:'DM Serif Display',serif;font-size:12px;color:#F7F3EE;background:#1E110A;padding:6px 10px;border-radius:6px;text-align:center;line-height:1.3}
+  .pname{font-size:14px;font-weight:600}
+  .pdesc{font-size:12px;color:#7A6A58;line-height:1.6;margin:8px 0}
+  .traits{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+  .trait{background:#F7F3EE;border-radius:6px;padding:10px}
+  .trait-dim{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6A58}
+  .trait-val{font-size:12px;font-weight:600;color:#5C3D2E;margin:2px 0}
+  .trait-desc{font-size:11px;color:#7A6A58;line-height:1.5}
+  .action{border:1.5px solid #1E110A;border-radius:10px;padding:14px;margin-bottom:12px;break-inside:avoid}
+  .action.urgent{border-color:#8B1A1A}
+  .a-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+  .a-num{width:24px;height:24px;border-radius:50%;background:#EDE5DA;border:1.5px solid #5C3D2E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#5C3D2E;flex-shrink:0}
+  .action.urgent .a-num{background:#8B1A1A;border-color:#8B1A1A;color:#fff}
+  .a-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:#1E110A;color:#fff;display:inline-block;margin-bottom:3px}
+  .a-tag.urgent{background:#8B1A1A}
+  .a-title{font-size:13px;font-weight:600;line-height:1.4}
+  .a-body{font-size:12px;color:#7A6A58;line-height:1.65;margin:6px 0;padding-left:34px}
+  .a-impact{display:inline-block;margin:4px 0 0 34px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid #5C3D2E;color:#5C3D2E}
+  .a-next{margin-top:10px;padding:10px 12px 10px 34px;border-top:1px dashed #EDE5DA}
+  .a-next-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#5C3D2E;margin-bottom:4px}
+  .a-next-body{font-size:11px;color:#7A6A58;line-height:1.65}
+  .rights-item{padding:12px 0;border-bottom:1px solid #EDE5DA;break-inside:avoid}
+  .rights-item.urgent{background:#FAF3F3;padding:12px;border-radius:6px;border:1px solid #F0DADA;margin-bottom:8px}
+  .rights-law{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#5C3D2E}
+  .rights-title{font-size:13px;font-weight:600;margin:4px 0}
+  .rights-body{font-size:12px;color:#7A6A58;line-height:1.65;margin-bottom:6px}
+  .rights-action{font-size:11px;font-weight:600;color:#2A6040}
+  .next-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+  .next-item{background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px}
+  .next-title{font-size:12px;font-weight:600;margin-bottom:4px}
+  .next-body{font-size:11px;color:#7A6A58;line-height:1.55}
+  .enroll-box{background:#1E110A;border-radius:12px;padding:28px;text-align:center;color:#F7F3EE;margin-top:16px}
+  .enroll-price{font-family:'DM Serif Display',serif;font-size:44px;margin-bottom:6px}
+  .enroll-price span{font-family:'DM Sans',sans-serif;font-size:18px;color:#8A7A6A;font-weight:400}
+  .enroll-desc{font-size:12px;color:#8A7A6A;margin-bottom:10px}
+  .enroll-compare{font-size:12px;color:#4A3728;margin-bottom:18px}
+  .enroll-cta{display:inline-block;background:#8B1A1A;color:#F7F3EE;font-weight:600;font-size:14px;padding:13px 32px;border-radius:6px;text-decoration:none;margin-bottom:12px}
+  .enroll-items{font-size:10px;color:#4A3728}
+  .disclaimer{font-size:11px;color:#8A7A6A;font-style:italic;margin-top:32px;padding-top:16px;border-top:1px solid #EDE5DA;line-height:1.6}
+  .tag-b{background:#1E110A;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em}
+  @media print{.page{padding:24px 32px}.cover{padding:36px}}
+</style>
+</head><body>
+
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">DebtSnap · Personal Debt Relief Report</div>
+  <h1>Your Debt<br>Relief Report</h1>
+  <div class="cover-sub">A personalized analysis of your debt situation, your legal rights,<br>and your complete action plan — in order of priority.</div>
+  <div class="cover-meta">
+    <span>Generated: ${ctx.generatedAt}</span>
+    <span>Profile: ${ctx.info.name}</span>
+    <span>Total debt: ${fmt(ctx.total)}</span>
   </div>
-  <table>
-    <thead><tr><th>Account</th><th>Balance</th><th>Status</th></tr></thead>
-    <tbody>${ctx.debts.map(d=>`<tr><td>${d.label}</td><td>${fmt(d.balance)}</td><td>${d.status}</td></tr>`).join('')}
-    <tr><td><strong>Total</strong></td><td><strong>${fmt(ctx.total)}</strong></td><td></td></tr></tbody>
-  </table>
+</div>
 
-  <h2>Your financial profile</h2>
-  <p><strong>${ctx.info.name}:</strong> ${ctx.info.desc}</p>
+<!-- DEBT PICTURE -->
+<h2>Your Debt Picture</h2>
+<div class="metrics">
+  <div class="metric"><div class="v">${fmt(ctx.total)}</div><div class="l">Total debt</div></div>
+  <div class="metric"><div class="v">${ctx.dti !== null ? ctx.dti + '%' : '—'}</div><div class="l">Debt-to-income</div></div>
+  <div class="metric"><div class="v">${fmt(Math.abs(ctx.disposable))}</div><div class="l">${ctx.disposable >= 0 ? 'Monthly surplus' : 'Monthly shortfall'}</div></div>
+  ${annualInt > 0 ? `<div class="metric"><div class="v">${fmt(Math.round(annualInt))}</div><div class="l">Annual interest cost</div></div>` : ''}
+</div>
 
-  <h2>Your complete action plan</h2>
-  ${(plan.actions||[]).map((a,i)=>`
-  <div class="action${a.urgent?' urgent':''}">
-    <div><span class="tag${a.urgent?' urgent-t':''}">${a.urgent?'Act now':a.priority}</span></div>
-    <h3><span class="action-num">${i+1}</span>${a.title}</h3>
-    <p>${a.body}</p>
-    ${a.impact?`<span class="impact">${a.impact}</span>`:''}
-  </div>`).join('')}
+<table>
+  <thead><tr><th>Account</th><th>Balance</th><th>Rate</th><th>Min pay</th><th>Status</th><th>Payoff (mins)</th></tr></thead>
+  <tbody>
+    ${ctx.debts.map(d => {
+      const mos = payoffMos(d.balance, d.rate, d.minPay);
+      const mosStr = mos === null ? '—' : mos > 360 ? '30+ yrs' : mos > 24 ? Math.ceil(mos/12)+' yrs' : mos+' mos';
+      return `<tr>
+        <td>${d.label}</td>
+        <td><strong>${fmt(d.balance)}</strong></td>
+        <td>${d.rateBand || (d.rate ? d.rate+'%' : '—')}</td>
+        <td>${d.minPay ? fmt(d.minPay)+'/mo' : '—'}</td>
+        <td>${statusMap[d.status]||d.status}</td>
+        <td>${mosStr}</td>
+      </tr>`;
+    }).join('')}
+    <tr><td><strong>Total</strong></td><td><strong>${fmt(ctx.total)}</strong></td><td colspan="4"></td></tr>
+  </tbody>
+</table>
 
-  <div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. Consult a licensed consumer law attorney for complex legal situations. Many work on contingency for FDCPA violations.</div>
-  </body></html>`;
+${ctx.dti > 36 ? `<div class="context-box">Your DTI of ${ctx.dti}% is ${ctx.dti > 50 ? 'in the critical range. At this level, debt is consuming a substantial portion of your income and limiting your options significantly.' : 'above the 36% threshold most lenders consider healthy. A structured plan now prevents this from worsening.'}</div>` : ''}
+${annualInt > 0 ? `<div class="context-box">Your accounts are costing you approximately <strong>${fmt(Math.round(annualInt/12))} per month</strong> — ${fmt(Math.round(annualInt))} per year — in pure interest charges. That is money reducing your balance by nothing. Eliminating your highest-rate account first materially changes this figure.</div>` : ''}
 
-  const blob = new Blob([html], { type: 'text/html' });
+<!-- PROFILE -->
+<h2>Your Financial Profile</h2>
+<div class="profile-device">
+  <div class="pcode">${ctx.archetype}</div>
+  <div class="pname">${ctx.info.name}</div>
+</div>
+<div class="pdesc">${ctx.info.desc}</div>
+${Object.entries(ctx.info.traits||{}).length > 0 ? `
+<div class="traits">
+  ${Object.entries(ctx.info.traits).map(([letter]) => {
+    const t = TRAIT_DEFS[letter];
+    if (!t) return '';
+    return `<div class="trait"><div class="trait-dim">${t.dim}</div><div class="trait-val">${t.val}</div><div class="trait-desc">${t.desc}</div></div>`;
+  }).join('')}
+</div>` : ''}
+<div class="context-box">${ctx.info.guide || 'Your plan is sequenced and toned to match how you respond best to guidance and action prompts.'}</div>
+
+<!-- ACTION PLAN -->
+<h2>Your Complete Action Plan</h2>
+${(plan.actions||[]).slice(0,5).map((a, i) => {
+  const whatNextBodies = [
+    "Gather your account numbers and the collector's mailing address. Send via USPS Certified Mail with Return Receipt. Keep the tracking number. The clock starts when they receive it.",
+    "Your servicer must process IDR applications within 30 days. You may qualify for immediate forbearance while reviewing. Your payment recalculates each year based on your tax return.",
+    "Call and say: 'I would like to apply for your financial hardship program.' Ask for the hardship or retention team. Get the agent name and any arrangement confirmed in writing before making a payment.",
+    "Pull your free credit reports from AnnualCreditReport.com first. Verify the balance, open date, and date of first delinquency. These dates determine your statute of limitations and negotiating position.",
+    "Once complete, update your debt list. Every completed step shifts your DTI and your leverage with remaining creditors. The subscription coaching layer will prompt you at the right time for the next action."
+  ];
+  return `<div class="action${a.urgent?' urgent':''}">
+    <div class="a-head">
+      <div class="a-num">${i+1}</div>
+      <div>
+        <span class="a-tag${a.urgent?' urgent':''}">${a.urgent?'Act now':priLbl[a.priority]||'Next step'}</span>
+        <div class="a-title">${a.title}</div>
+      </div>
+    </div>
+    <div class="a-body">${a.body}</div>
+    ${a.impact?`<div class="a-impact">${a.impact}</div>`:''}
+    <div class="a-next">
+      <div class="a-next-lbl">${i===0?'Before you start':i===1?'What to expect':i===2?'What to say':i===3?'What to prepare':'After this step'}</div>
+      <div class="a-next-body">${whatNextBodies[i]}</div>
+    </div>
+  </div>`;
+}).join('')}
+
+<!-- LEGAL RIGHTS -->
+<h2>Your Legal Rights</h2>
+${ctx.inCollections ? `
+<div class="rights-item urgent">
+  <div class="rights-law">FDCPA §809(b) — Applies to your accounts</div>
+  <div class="rights-title">Right to demand debt validation</div>
+  <div class="rights-body">Any debt collector must provide written verification of a debt upon written request within 30 days of first contact. Until they verify, all collection activity — calls, letters, credit reporting — must stop completely. Failure to comply is a federal violation.</div>
+  <div class="rights-action">Send a certified Debt Validation Letter within 30 days. Template available with ongoing support subscription.</div>
+</div>
+<div class="rights-item urgent">
+  <div class="rights-law">FDCPA §805(c) — Applies to your accounts</div>
+  <div class="rights-title">Right to demand all contact cease</div>
+  <div class="rights-body">A written cease-and-desist letter to a collector limits them to one final contact — to confirm cessation or notify of a specific legal action. Further contact is a federal violation worth up to $1,000 in statutory damages per incident plus attorney fees.</div>
+  <div class="rights-action">Send via certified mail. Log every contact afterward with date, time, and content.</div>
+</div>` : ''}
+<div class="rights-item">
+  <div class="rights-law">FCRA §611</div>
+  <div class="rights-title">Right to dispute and correct your credit report</div>
+  <div class="rights-body">Free reports are available weekly at AnnualCreditReport.com. Any disputed item must be investigated within 30 days. Items that cannot be verified must be removed. Studies show 30–40% of reports contain errors.</div>
+  <div class="rights-action">Pull all three reports now. Dispute directly with each bureau in writing — no third party needed.</div>
+</div>
+${ctx.hasFedStudent ? `
+<div class="rights-item">
+  <div class="rights-law">Higher Education Act §493C</div>
+  <div class="rights-title">Right to income-driven repayment</div>
+  <div class="rights-body">Every federal borrower has the statutory right to enroll in an income-driven plan regardless of credit history or employment status. Payments can be as low as $0/month. Remaining balances are forgiven after 20–25 years of qualifying payments.</div>
+  <div class="rights-action">Apply at studentaid.gov. Takes 10 minutes.</div>
+</div>` : ''}
+${ctx.debts.some(d=>d.type==='medical') ? `
+<div class="rights-item">
+  <div class="rights-law">ACA §501(r)</div>
+  <div class="rights-title">Right to charity care on medical debt</div>
+  <div class="rights-body">All 501(c)(3) nonprofit hospitals must have financial assistance programs. They cannot take extraordinary collection actions — including credit reporting or lawsuits — without first screening you for eligibility.</div>
+  <div class="rights-action">Call billing and ask for a "financial assistance application" by name. This is a legal requirement.</div>
+</div>` : ''}
+
+<!-- WHAT COMES NEXT -->
+<h2>What Comes Next</h2>
+<p style="font-style:italic">Your report covers the foundational steps. Execution is what changes the numbers — and that is what the ongoing support subscription covers.</p>
+<div class="next-grid">
+  <div class="next-item"><div class="next-title">Negotiation scripts</div><div class="next-body">Word-for-word call scripts for hardship programs, settlement offers, and creditor disputes — matched to your profile type and account category.</div></div>
+  <div class="next-item"><div class="next-title">Letter templates</div><div class="next-body">Six production-ready letters — debt validation, dispute, cease and desist, goodwill deletion, hardship request, and settlement offer — pre-filled for your accounts.</div></div>
+  <div class="next-item"><div class="next-title">Timed check-ins</div><div class="next-body">Prompts and nudges calibrated to your ${ctx.info.name} profile, sent at the moments most likely to keep you moving forward.</div></div>
+  <div class="next-item"><div class="next-title">Personal coaching</div><div class="next-body">Contextual guidance for your specific situation — not generic advice. Ask questions, work through sticking points, handle responses from creditors.</div></div>
+  <div class="next-item"><div class="next-title">Playbooks</div><div class="next-body">Step-by-step guides for debt settlement, medical billing disputes, student loan appeals, credit repair, and statute of limitations strategy.</div></div>
+  <div class="next-item"><div class="next-title">Progress tracking</div><div class="next-body">A running view of your debt picture as it changes — balances, DTI, completed steps. Seeing the numbers move is one of the most powerful motivators.</div></div>
+</div>
+
+<div class="enroll-box">
+  <div class="enroll-price">$39<span>/month</span></div>
+  <div class="enroll-desc">Cancel anytime · No contracts · No percentage of your debt</div>
+  <div class="enroll-compare">Traditional debt agencies charge 15–25% of your total balance. On ${fmt(ctx.total)}, that is ${fmt(Math.round(ctx.total*0.2))} or more.</div>
+  <a href="https://debtsnap.com" class="enroll-cta">Enroll in ongoing support →</a>
+  <div class="enroll-items">Scripts · Templates · Coaching · Playbooks · Check-ins · Progress tracking</div>
+</div>
+
+<div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm and does not provide legal representation. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>
+
+</div><!-- end .page -->
+</body></html>`;
+
+  const safeFilename = `DebtSnap-Report-${ctx.generatedAt.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+
+  try {
+    // Try the Vercel serverless PDF endpoint first
+    const resp = await fetch('/api/pdf', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ html: htmlContent, filename: safeFilename }),
+    });
+
+    if (resp.ok) {
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = safeFilename;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+  } catch (e) {
+    // Serverless not available — fall back to print dialog
+  }
+
+  // Fallback: open printable HTML in new tab with print dialog
+  const blob = new Blob([htmlContent], { type: 'text/html' });
   const url  = URL.createObjectURL(blob);
-  const a    = document.createElement('a');
-  a.href     = url;
-  a.download = `DebtSnap-Report-${ctx.generatedAt.replace(/,?\s/g,'-')}.html`;
-  a.click();
+  const win  = window.open(url, '_blank');
+  if (win) {
+    win.onload = () => {
+      win.focus();
+      setTimeout(() => win.print(), 500);
+    };
+  }
   URL.revokeObjectURL(url);
 }
+
 
 // ── FAQ ──────────────────────────────────────────────
 function toggleFaq(el) {

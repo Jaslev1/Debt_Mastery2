@@ -513,3 +513,184 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
   .plan-card-header { flex-direction: column; gap: 4px; }
   .plan-card-price { text-align: left; }
 }
+
+/* ── REPORT ENHANCEMENTS ──────────────────────────── */
+.report-context-box {
+  font-size: 13px; color: var(--stone); line-height: 1.65;
+  background: var(--offwhite); border-left: 2px solid var(--brown);
+  padding: 10px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  margin-top: 10px;
+}
+.report-profile-header { margin-bottom: 16px; }
+.report-profile-badge {
+  font-size: 15px; font-weight: 600; color: var(--espresso);
+  margin-bottom: 6px;
+}
+.report-profile-guide {
+  font-size: 13px; color: var(--stone); line-height: 1.65;
+}
+.report-trait-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 9px;
+}
+.report-trait {
+  background: var(--offwhite); border-radius: var(--r-sm); padding: 11px;
+}
+.report-trait-dim { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
+.report-trait-val { font-size: 13px; font-weight: 600; color: var(--brown); margin-bottom: 3px; }
+.report-trait-desc { font-size: 12px; color: var(--stone); line-height: 1.5; }
+
+.report-action-next {
+  margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--offwhite);
+  padding-left: 34px;
+}
+.ran-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brown); margin-bottom: 4px; }
+.ran-body { font-size: 13px; color: var(--stone); line-height: 1.6; }
+
+.rights-item { padding: 16px 0; border-bottom: 1px solid var(--offwhite); }
+.rights-item:last-child { border-bottom: none; }
+.rights-law { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brown); margin-bottom: 4px; }
+.rights-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--espresso); }
+.rights-body { font-size: 13px; color: var(--stone); line-height: 1.65; margin-bottom: 8px; }
+.rights-action {
+  font-size: 12px; font-weight: 600; color: var(--green);
+  display: flex; align-items: flex-start; gap: 6px;
+}
+
+/* Report — what's next section */
+.report-next-intro {
+  font-size: 14px; color: var(--stone); line-height: 1.7;
+  margin-bottom: 20px; font-style: italic;
+}
+.report-next-items { display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+.rni { display: flex; gap: 14px; align-items: flex-start; }
+.rni-icon {
+  width: 36px; height: 36px; flex-shrink: 0; border-radius: 50%;
+  background: var(--cream); border: 1.5px solid var(--brown);
+  display: flex; align-items: center; justify-content: center; color: var(--brown);
+}
+.rni-title { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+.rni-body { font-size: 13px; color: var(--stone); line-height: 1.6; }
+
+.report-next-cta {
+  background: var(--espresso); border-radius: var(--r-md);
+  padding: 24px; text-align: center; margin-top: 8px;
+}
+.rnc-price { font-family: var(--font-serif); font-size: 36px; color: var(--cream); margin-bottom: 8px; }
+.rnc-price span { font-family: var(--font-sans); font-size: 16px; color: var(--sand); font-weight: 400; }
+.rnc-desc { font-size: 13px; color: var(--sand); margin-bottom: 18px; line-height: 1.6; max-width: 360px; margin-left: auto; margin-right: auto; }
+.rnc-btn { width: 100%; justify-content: center; padding: 14px !important; font-size: 15px !important; margin-bottom: 10px; }
+.rnc-compare { font-size: 11px; color: var(--stone); }
+
+/* ── LOGO WORDMARK SPACING ───────────────────────── */
+.logo-wordmark { margin-left: 2px; }
+
+/* ── DEBT GRID EXPANSION ─────────────────────────── */
+.debt-grid-2 {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;
+  padding-top: 8px; border-top: 1px solid var(--offwhite);
+}
+.debt-grid-2 label { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--stone); display: block; margin-bottom: 4px; }
+.debt-grid-2 input { width: 100%; font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--espresso); background: var(--offwhite); border: 1px solid var(--sand); border-radius: var(--r-sm); padding: 7px 9px; transition: all .15s; }
+.debt-grid-2 input:focus { outline: none; background: var(--cream); border-color: var(--brown); }
+
+/* ── REPORT TABLE ENHANCEMENTS ───────────────────── */
+.report-total-row td { font-weight: 600; border-top: 2px solid var(--espresso) !important; padding-top: 10px; }
+.report-context-box {
+  font-size: 13px; color: var(--stone); line-height: 1.7;
+  background: var(--offwhite); border-left: 2px solid var(--brown);
+  padding: 11px 14px; border-radius: 0 var(--r-sm) var(--r-sm) 0; margin-bottom: 8px;
+}
+.report-context-box strong { color: var(--espresso); }
+
+/* ── PROFILE DEVICE ──────────────────────────────── */
+.rp-name-device {
+  display: flex; align-items: center; gap: 14px;
+  border: 1.5px solid var(--espresso); border-radius: var(--r-md);
+  padding: 14px 18px; margin-bottom: 14px;
+  background: var(--cream);
+}
+.rp-code {
+  font-family: var(--font-serif); font-size: 13px; font-weight: 400;
+  color: var(--cream); background: var(--espresso);
+  padding: 6px 10px; border-radius: var(--r-sm);
+  flex-shrink: 0; letter-spacing: .02em; line-height: 1.2;
+  text-align: center;
+}
+.rp-name {
+  font-size: 15px; font-weight: 600; color: var(--espresso); line-height: 1.3;
+}
+.rp-desc { font-size: 13px; color: var(--stone); line-height: 1.65; margin-bottom: 14px; }
+.report-trait-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-bottom: 14px; }
+.report-trait { background: var(--offwhite); border-radius: var(--r-sm); padding: 11px; }
+.report-trait-dim { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone); margin-bottom: 3px; }
+.report-trait-val { font-size: 13px; font-weight: 600; color: var(--brown); margin-bottom: 3px; }
+.report-trait-desc { font-size: 12px; color: var(--stone); line-height: 1.5; }
+.rp-guide-box {
+  background: var(--offwhite); border-radius: var(--r-sm);
+  padding: 12px 14px; border-left: 2px solid var(--brown);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+}
+.rp-guide-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brown); margin-bottom: 5px; }
+.rp-guide-body { font-size: 13px; color: var(--stone); line-height: 1.6; }
+
+/* Also fix profile-card-wrap in results */
+.profile-card-wrap {
+  max-width: var(--max); margin: 0 auto; padding: 20px var(--pad);
+  border-bottom: 1px solid var(--offwhite);
+}
+
+/* ── ACTION WHAT-NEXT ─────────────────────────────── */
+.report-what-next {
+  margin-top: 12px; padding-top: 12px; padding-left: 36px;
+  border-top: 1px dashed var(--offwhite);
+}
+.rwn-label { font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brown); margin-bottom: 5px; }
+.rwn-body { font-size: 13px; color: var(--stone); line-height: 1.65; }
+
+/* ── RIGHTS ENHANCEMENTS ─────────────────────────── */
+.rights-item { padding: 16px 0; border-bottom: 1px solid var(--offwhite); }
+.rights-item:last-child { border-bottom: none; }
+.rights-item.urgent { background: var(--red-xlt); padding: 14px; border-radius: var(--r-sm); border: 1px solid var(--red-lt); margin-bottom: 8px; }
+.rights-header { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+.rights-law { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--brown); }
+.rights-urgent-tag { font-size: 10px; font-weight: 700; background: var(--red); color: var(--cream); padding: 2px 7px; border-radius: 3px; }
+.rights-title { font-size: 14px; font-weight: 600; margin-bottom: 6px; color: var(--espresso); }
+.rights-body { font-size: 13px; color: var(--stone); line-height: 1.65; margin-bottom: 8px; }
+.rights-action { font-size: 12px; font-weight: 600; color: var(--green); display: flex; align-items: flex-start; gap: 6px; }
+
+/* ── WHAT COMES NEXT ─────────────────────────────── */
+.report-section-next { background: var(--offwhite); }
+.report-next-intro { font-size: 14px; color: var(--stone); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.report-next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+.rng-item { background: var(--cream); border: 1.5px solid var(--espresso); border-radius: var(--r-md); padding: 14px; }
+.rng-title { font-size: 13px; font-weight: 600; margin-bottom: 5px; }
+.rng-body { font-size: 12px; color: var(--stone); line-height: 1.6; }
+
+/* Enroll card */
+.report-enroll-card {
+  background: var(--espresso); border-radius: var(--r-lg);
+  padding: 28px; text-align: center;
+}
+.rec-eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--sand); margin-bottom: 8px; }
+.rec-price { font-family: var(--font-serif); font-size: 48px; color: var(--cream); line-height: 1; margin-bottom: 6px; }
+.rec-per { font-family: var(--font-sans); font-size: 18px; color: var(--sand); font-weight: 400; }
+.rec-tagline { font-size: 13px; color: var(--sand); margin-bottom: 12px; }
+.rec-compare { font-size: 13px; color: var(--stone); line-height: 1.6; margin-bottom: 20px; max-width: 400px; margin-left: auto; margin-right: auto; }
+.rec-compare strong { color: var(--cream); }
+.rec-btn { width: 100%; justify-content: center; padding: 15px !important; font-size: 15px !important; margin-bottom: 14px; }
+.rec-items { font-size: 11px; color: var(--stone); display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+
+/* Responsive for report */
+@media (max-width: 540px) {
+  .report-next-grid { grid-template-columns: 1fr; }
+  .report-metric-row { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── RATE BAND SELECT ───────────────────────────── */
+.debt-grid-2 select {
+  width: 100%; font-family: var(--font-sans); font-size: 13px; font-weight: 400;
+  color: var(--espresso); background: var(--offwhite);
+  border: 1px solid var(--sand); border-radius: var(--r-sm);
+  padding: 7px 9px; appearance: none; transition: all .15s;
+}
+.debt-grid-2 select:focus { outline: none; background: var(--cream); border-color: var(--brown); }
