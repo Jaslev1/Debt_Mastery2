@@ -14,34 +14,39 @@
 <header class="header">
   <div class="header-inner">
     <!-- Snapping fingers logo -->
-    <button class="logo" onclick="showPage('process')">
+    <button class="logo" onclick="showPage('home')">
       <span class="logo-mark">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Palm / lower hand -->
-          <path d="M13 23 C11 23 9 21 9 18 L9 12 C9 11.2 9.7 10.5 10.5 10.5 C11.3 10.5 12 11.2 12 12 L12 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <!-- Index finger -->
-          <path d="M12 16 L12 8.5 C12 7.7 12.7 7 13.5 7 C14.3 7 15 7.7 15 8.5 L15 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
-          <!-- Middle finger -->
-          <path d="M15 16 L15 9 C15 8.2 15.7 7.5 16.5 7.5 C17.3 7.5 18 8.2 18 9 L18 16" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
+        <svg width="30" height="30" viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Thumb — curved base -->
+          <path d="M9 18 C9 21.5 11.5 24 15 24 C18.5 24 21 21.5 21 18 L21 14" stroke="#1E110A" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Palm sides -->
+          <path d="M9 18 L9 15" stroke="#1E110A" stroke-width="1.8" stroke-linecap="round"/>
           <!-- Ring finger -->
-          <path d="M18 16 L18 11 C18 10.2 18.7 9.5 19.5 9.5 C20.3 9.5 21 10.2 21 11 L21 18 C21 21 19 23 17 23 L13 23" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
-          <!-- Thumb coming in to snap -->
-          <path d="M10.5 13.5 C9 12.8 7.5 13.5 7.5 15" stroke="#1E110A" stroke-width="1.5" stroke-linecap="round"/>
-          <!-- Snap sparks — red -->
-          <line x1="6" y1="9.5" x2="5.2" y2="8" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="4.5" y1="12.5" x2="3" y2="12.5" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
-          <line x1="5.5" y1="15.5" x2="4" y2="16.5" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
+          <path d="M21 14 L21 10 C21 9 21.8 8.2 22.8 8.2 C23.8 8.2 24.5 9 24.5 10 L24.5 17" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
+          <!-- Middle finger — the snapping one, slightly raised/bent -->
+          <path d="M18 14 L18 8.5 C18 7.5 18.8 6.8 19.8 6.8 C20.8 6.8 21.5 7.5 21.5 8.5 L21.5 10" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
+          <!-- Index finger -->
+          <path d="M15 14 L15 9 C15 8 15.8 7.2 16.8 7.2 C17.8 7.2 18.5 8 18.5 9 L18.5 8.8" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
+          <!-- Thumb pad pressing against middle finger (pre-snap position) -->
+          <path d="M9 15 C10 13.5 12 13 14 13.5 L15 14" stroke="#1E110A" stroke-width="1.7" stroke-linecap="round"/>
+          <!-- Snap energy lines — red, radiating up-right -->
+          <line x1="22" y1="6" x2="23.5" y2="4" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="25" y1="7.5" x2="27" y2="6.5" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="25.5" y1="11" x2="28" y2="10.5" stroke="#8B1A1A" stroke-width="1.6" stroke-linecap="round"/>
+          <line x1="23.5" y1="4.5" x2="26" y2="3" stroke="#8B1A1A" stroke-width="1.3" stroke-linecap="round"/>
         </svg>
       </span>
       DebtSnap
     </button>
     <nav class="header-nav">
+      <button class="nav-link" onclick="showPage('home')">About</button>
       <button class="nav-link" onclick="showPage('process')">How it works</button>
       <button class="nav-link nav-cta" onclick="startApp()">Get my free plan</button>
     </nav>
     <button class="hamburger" onclick="toggleMobile()"><span></span><span></span><span></span></button>
   </div>
   <div class="mobile-nav" id="mobile-nav">
+    <button onclick="showPage('home');toggleMobile()">About</button>
     <button onclick="showPage('process');toggleMobile()">How it works</button>
     <button onclick="startApp();toggleMobile()">Get my free plan →</button>
   </div>
@@ -57,7 +62,7 @@
 </div>
 
 <!-- ══ HOME / ABOUT (landing) ══════════════════════ -->
-<div class="page" id="page-home">
+<div class="page active" id="page-home">
   <div class="landing-hero">
     <div class="eyebrow">Free · 3 minutes · No account needed</div>
     <div class="tier-headline">
@@ -136,7 +141,7 @@
 </div>
 
 <!-- ══ PROCESS PAGE ══════════════════════════════════ -->
-<div class="page active" id="page-process">
+<div class="page" id="page-process">
   <div class="process-hero">
     <div class="eyebrow">How DebtSnap works</div>
     <h1>A clear path forward.<br><em>In about 3 minutes.</em></h1>

@@ -893,5 +893,5 @@ function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
 
 // ── INIT ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  showPage('process');
+  showPage('home');
 });
