@@ -359,9 +359,9 @@ async function generatePlan() {
   const ctx = buildCtx();
 
   const msgs = [
-    ['Analyzing your situation...', 'Calculating your debt-to-income ratio'],
-    ['Building your profile...', `Scoring your ${ctx.archetype} behavioral type`],
-    ['Generating your action plan...', 'Matching strategies to your situation'],
+    ['Reviewing your accounts...', 'Calculating your debt-to-income ratio'],
+    ['Building your profile...', `Scoring your ${ctx.archetype} behavior type`],
+    ['Preparing your plan...', 'Matching strategies to your situation'],
   ];
   let mi = 0;
   const iv = setInterval(() => {
@@ -370,8 +370,12 @@ async function generatePlan() {
       document.getElementById('load-sub').textContent = msgs[mi][1];
       mi++;
     }
-  }, 1300);
+  }, 1100);
 
+  // Always generate a real rule-based plan first
+  const basePlan = buildRulePlan(ctx);
+
+  // Try to enhance actions 4-5 via API (non-blocking)
   try {
     const res = await fetch(API_URL, {
       method: 'POST',
@@ -383,62 +387,214 @@ async function generatePlan() {
       },
       body: JSON.stringify({
         model: MODEL,
-        max_tokens: 1200,
-        messages: [{ role: 'user', content: buildPrompt(ctx) }],
+        max_tokens: 800,
+        messages: [{ role: 'user', content: buildEnhancePrompt(ctx, basePlan) }],
       }),
     });
     const data = await res.json();
     clearInterval(iv);
     let raw = (data.content?.find(b => b.type==='text')?.text || '')
       .replace(/```json|```/g, '').trim();
-    const plan = JSON.parse(raw);
-    renderResults(ctx, plan);
+    const enhanced = JSON.parse(raw);
+    // Merge: keep first 3 rule-based, replace 4-5 with API
+    if (enhanced.actions && enhanced.actions.length >= 2) {
+      basePlan.actions = basePlan.actions.slice(0,3).concat(enhanced.actions.slice(0,2));
+    }
+    if (enhanced.summary) basePlan.summary = enhanced.summary;
   } catch (e) {
     clearInterval(iv);
-    renderFallback(ctx);
+    // Base plan already complete — just continue
   }
+
+  renderResults(ctx, basePlan);
   showStep('s3', 100);
 }
 
-function buildPrompt(ctx) {
-  return `You are a debt relief advisor. Generate a personalized action plan. Return ONLY valid JSON — no markdown, no preamble.
+// ── RULE-BASED PLAN ENGINE ────────────────────────
+// Generates real, specific first 3 actions from user data.
+// No API required. Every action references the user's actual numbers.
+function buildRulePlan(ctx) {
+  const actions = [];
+  const totalFmt = fmt(ctx.total);
+  const incomeFmt = fmt(ctx.income);
+  const dispFmt = fmt(Math.abs(ctx.disposable));
 
-FINANCIAL PROFILE:
-- Total debt: ${fmt(ctx.total)}
-- Accounts: ${ctx.debts.map(d => `${d.type} ${fmt(d.balance)} (${d.status})`).join(' | ')}
-- Monthly income: ${fmt(ctx.income)} | Expenses: ${fmt(ctx.expenses)} | Disposable: ${fmt(ctx.disposable)}
-- Debt-to-income ratio: ${ctx.dti !== null ? ctx.dti+'%' : 'unknown'}
-- Employment: ${ctx.employment} | Family size: ${ctx.family}
-- Federal student loans: ${ctx.hasFedStudent}
-- Public/nonprofit employer: ${ctx.hasPublicNP}
-- Accounts in collections: ${ctx.inCollections}
-- Behavioral archetype: ${ctx.archetype} — ${ctx.info.name} (${ctx.info.short})
-- Communication tone required: ${ctx.info.tone}
-- Primary goal: ${ctx.goal}
+  // ── RULE 1: Collections / charged-off → FDCPA validation FIRST ──
+  const collAccounts = ctx.debts.filter(d => ['collections','charged-off'].includes(d.status));
+  if (collAccounts.length > 0) {
+    const collTotal = fmt(collAccounts.reduce((s,d) => s+d.balance, 0));
+    const collNames = collAccounts.map(d => DEBT_TYPES.find(t=>t.v===d.type)?.l || d.type).join(' and ');
+    actions.push({
+      title: 'Send a debt validation letter right now',
+      body: `You have ${collAccounts.length > 1 ? collAccounts.length + ' accounts' : 'an account'} (${collNames}, totaling ${collTotal}) in collections or charged off. Under the Fair Debt Collection Practices Act, every collector must verify a debt in writing before continuing collection. Send a certified validation letter — collection calls and letters must legally stop until they comply, and errors are common.`,
+      impact: `Legally pauses all collection activity on ${collTotal} of debt`,
+      priority: 'high',
+      urgent: true,
+    });
+  }
 
-PRIORITIZATION RULES:
-1. If federal student loans AND disposable income < $500/mo: action 1 = IDR eligibility check with specific savings estimate
-2. If federal student loans AND public/nonprofit employer: PSLF screening in top 2 actions
-3. If accounts in collections: FDCPA debt validation letter in top 3 actions
-4. Tone: ${ctx.info.tone==='cooperative'?'warm, supportive, zero pressure':'ctx.info.tone==="reciprocity"?"mutual-benefit framing, we\'re in this together":"direct, data-driven, lead with numbers and specific outcomes'}
-5. Actions 1–3 are free. Actions 4–5 are premium — valuable but clearly incremental.
-6. Be specific: programs by name, dollar amounts, timelines, creditor categories.
-7. Survey insight: users' top fears are cost (48%), data privacy (40%), and scams (38%). Acknowledge trustworthiness subtly in guidance.
+  // ── RULE 2: Federal student loans — IDR check ──
+  if (ctx.hasFedStudent) {
+    const fedLoans = ctx.debts.filter(d => d.type === 'student-federal');
+    const fedTotal = fmt(fedLoans.reduce((s,d) => s+d.balance, 0));
+    const familySize = parseInt(ctx.family) || 1;
+    // Federal poverty guideline multiples (2024, 150% threshold for IBR/PAYE)
+    const povertyLine = [0, 14580, 19720, 24860, 30000, 35140, 40280, 45420, 50560][Math.min(familySize, 8)] || 14580;
+    const idrThreshold = povertyLine * 1.5;
+    const annualIncome = ctx.income * 12;
+    const qualifies = annualIncome < idrThreshold || ctx.disposable < 300;
 
-Return ONLY this JSON:
-{
-  "headline": "max 12 words — personalized to their biggest opportunity",
-  "summary": "2 sentences: honest assessment of their situation + the single biggest opportunity. Warm, no panic.",
-  "actions": [
-    {
-      "title": "max 8 words — specific, not generic",
-      "body": "2–3 sentences of specific, actionable guidance for their exact numbers and situation",
-      "impact": "specific measurable impact — dollar amount or time saved",
-      "priority": "high | medium | low"
+    if (ctx.hasPublicNP) {
+      actions.push({
+        title: 'Screen for Public Service Loan Forgiveness',
+        body: `You have ${fedTotal} in federal student loans and work for a ${ctx.employment === 'public' ? 'government' : 'nonprofit'} employer — which means you may qualify for full loan forgiveness after 120 monthly payments under Public Service Loan Forgiveness (PSLF). Visit studentaid.gov/pslf, complete the employer certification form, and submit it today. Your payments since ${new Date().getFullYear() - 3} may already count.`,
+        impact: `Potential full forgiveness of ${fedTotal} after 120 payments`,
+        priority: 'high',
+        urgent: false,
+      });
+    } else if (qualifies || ctx.disposable < 500) {
+      const idrPayment = Math.max(0, Math.round((annualIncome - idrThreshold) * 0.1 / 12));
+      actions.push({
+        title: 'Apply for income-driven repayment on your federal loans',
+        body: `You have ${fedTotal} in federal student loans. Based on your income of ${incomeFmt}/month and household size of ${ctx.family}, you likely qualify for an income-driven repayment plan — which caps your monthly payment at ${idrPayment === 0 ? '$0' : fmt(idrPayment) + '/month'} instead of the standard amount. Call your servicer or apply at studentaid.gov/apply-for-aid/find-out-what-you-owe. It takes about 10 minutes.`,
+        impact: idrPayment === 0 ? 'Could reduce your payment to $0/month' : `Could reduce payment to approximately ${fmt(idrPayment)}/month`,
+        priority: 'high',
+        urgent: false,
+      });
+    } else {
+      actions.push({
+        title: 'Review your federal loan repayment options',
+        body: `You have ${fedTotal} in federal student loans. With your current income of ${incomeFmt}/month, your repayment options include income-driven plans, graduated repayment, and extended plans. Log into studentaid.gov to see your exact servicer, current balance, and all available plans side by side. If your situation changes, IDR plans can be adjusted at any time.`,
+        impact: `Multiple options available on ${fedTotal} in federal loans`,
+        priority: 'medium',
+        urgent: false,
+      });
     }
-  ]
-}`;
+  }
+
+  // ── RULE 3: High-rate credit card debt with capacity to pay ──
+  const ccDebts = ctx.debts.filter(d => d.type === 'credit-card');
+  if (ccDebts.length > 0 && actions.length < 3) {
+    const ccTotal = ccDebts.reduce((s,d) => s+d.balance, 0);
+    const ccFmt = fmt(ccTotal);
+    const lateCC = ccDebts.filter(d => ['30','60','90'].includes(d.status));
+    if (lateCC.length > 0 && ctx.disposable > 0) {
+      const lateFmt = fmt(lateCC.reduce((s,d)=>s+d.balance,0));
+      actions.push({
+        title: 'Call your credit card hardship line — not customer service',
+        body: `You have ${lateFmt} in credit card debt that is past due. Major issuers — Chase, Bank of America, Citi, Capital One, Discover — have unpublished hardship programs that can freeze interest, reduce minimum payments, and waive late fees for 6–12 months. Ask specifically for the "hardship program" or "financial assistance team" when you call. Get any agreement in writing before making a payment.`,
+        impact: `Could reduce interest charges and stop late fees on ${lateFmt}`,
+        priority: 'high',
+        urgent: false,
+      });
+    } else if (ctx.disposable > 200) {
+      const minPay = fmt(Math.round(ccTotal * 0.02)); // ~2% minimum
+      const avalancheImpact = fmt(Math.round(ccTotal * 0.18 / 12)); // rough annual interest
+      actions.push({
+        title: 'Set up an avalanche payoff plan for your credit cards',
+        body: `You have ${ccFmt} across ${ccDebts.length} credit card${ccDebts.length > 1 ? 's' : ''}. With ${dispFmt} available monthly after expenses, you can make meaningful progress. List your cards by interest rate — highest first — and direct every extra dollar to the highest-rate card while paying minimums on the rest. This approach minimizes total interest paid.`,
+        impact: `Could save approximately ${avalancheImpact}/year in interest`,
+        priority: 'medium',
+        urgent: false,
+      });
+    }
+  }
+
+  // ── RULE 4: Medical debt ──
+  const medDebts = ctx.debts.filter(d => d.type === 'medical');
+  if (medDebts.length > 0 && actions.length < 3) {
+    const medTotal = fmt(medDebts.reduce((s,d) => s+d.balance, 0));
+    actions.push({
+      title: 'Request an itemized bill and financial assistance application',
+      body: `You have medical debt totaling ${medTotal}. Two steps to take this week: First, request a detailed itemized bill — studies show 30–40% of medical bills contain errors. Second, ask the hospital or provider for a financial assistance application — nonprofit hospitals (designated 501(c)(3)) are legally required to offer charity care, which can eliminate or significantly reduce balances based on income.`,
+      impact: `Potential reduction or elimination of ${medTotal} in medical debt`,
+      priority: 'high',
+      urgent: false,
+    });
+  }
+
+  // ── RULE 5: DTI too high with no other actions yet ──
+  if (actions.length < 2 && ctx.dti !== null && ctx.dti > 40) {
+    actions.push({
+      title: 'Pull your free credit reports and build your debt map',
+      body: `Your debt-to-income ratio of ${ctx.dti}% is above the threshold lenders consider healthy (36%). Before any other step, get the full picture: pull all three credit reports free at AnnualCreditReport.com. This shows every creditor, balance, and status — including accounts you may have forgotten — and is the foundation for every negotiation or dispute that follows.`,
+      impact: 'Foundation step — required before negotiating anything',
+      priority: 'medium',
+      urgent: false,
+    });
+  }
+
+  // ── FILL TO 3 if needed ──
+  const fillers = [
+    {
+      title: 'Check your credit reports for errors',
+      body: `Pull all three credit reports free at AnnualCreditReport.com. With ${totalFmt} in total debt, even one inaccurate account removed can improve your negotiating position and potentially lower your interest rates. Dispute any errors directly with the credit bureau — they have 30 days to investigate.`,
+      impact: 'Could improve negotiating position immediately',
+      priority: 'medium',
+      urgent: false,
+    },
+    {
+      title: 'Contact your largest creditor about a payment arrangement',
+      body: `Your largest debt accounts for a significant portion of your ${totalFmt} total. Most creditors prefer a payment arrangement over default — call and ask about deferment, forbearance, or a reduced-rate payment plan. Be specific: tell them your income of ${incomeFmt}/month and what you can realistically pay each month.`,
+      impact: 'Stops default risk on your largest account',
+      priority: 'medium',
+      urgent: false,
+    },
+  ];
+  let fi = 0;
+  while (actions.length < 3 && fi < fillers.length) {
+    actions.push(fillers[fi++]);
+  }
+
+  // ── PLACEHOLDER actions 4-5 (shown blurred, replaced by API if available) ──
+  actions.push({
+    title: 'Negotiate a lump-sum settlement on charged-off accounts',
+    body: 'Collectors who purchase charged-off debt typically pay 1–7 cents on the dollar. This gives you significant room to negotiate.',
+    impact: 'Potential 40–60% reduction on settled accounts',
+    priority: 'medium',
+    urgent: false,
+  });
+  actions.push({
+    title: 'Build your dispute and validation letter toolkit',
+    body: 'A complete set of creditor-ready letters — customized to your accounts and state — gives you leverage at every stage.',
+    impact: 'Legal protection across all your accounts',
+    priority: 'low',
+    urgent: false,
+  });
+
+  const info = ARCHETYPES[ctx.archetype] || ARCHETYPES.DEFAULT;
+  return {
+    headline: buildHeadline(ctx),
+    summary: info.desc,
+    actions: actions.slice(0, 5),
+  };
 }
+
+function buildHeadline(ctx) {
+  if (ctx.inCollections && ctx.hasFedStudent) return `Stop the collectors and lower your student loan payment`;
+  if (ctx.inCollections) return `Your legal rights can stop those collection calls`;
+  if (ctx.hasFedStudent && ctx.hasPublicNP) return `You may qualify for full student loan forgiveness`;
+  if (ctx.hasFedStudent && ctx.disposable < 500) return `You may qualify for a $0 student loan payment`;
+  if (ctx.dti > 50) return `A high debt load — here's where to start`;
+  if (ctx.disposable < 0) return `Monthly shortfall — here's how to find breathing room`;
+  return `Here's your personalized debt action plan`;
+}
+
+// Prompt for API to generate enhanced actions 4-5 only
+function buildEnhancePrompt(ctx, basePlan) {
+  return `You are a debt relief advisor. The user already has their first 3 action steps. Generate ONLY actions 4 and 5 — these are the premium steps shown behind a paywall. Make them genuinely valuable and specific to this situation.
+
+PROFILE: ${ctx.archetype} — ${ctx.info.short}
+Total debt: ${fmt(ctx.total)} | Disposable: ${fmt(ctx.disposable)}/mo | Goal: ${ctx.goal}
+Accounts: ${ctx.debts.map(d=>`${d.type} ${fmt(d.balance)} (${d.status})`).join(', ')}
+Employment: ${ctx.employment} | Family: ${ctx.family}
+Tone required: ${ctx.info.tone}
+
+Return ONLY this JSON (2 actions only):
+{"summary":"2 sentences personalized to their situation — warm, specific","actions":[{"title":"max 8 words","body":"2-3 sentences specific guidance","impact":"specific dollar or time outcome","priority":"medium"}]}`;
+}
+
+
 
 // ── RENDER RESULTS ────────────────────────────────────
 function renderResults(ctx, plan) {
@@ -483,12 +639,13 @@ function renderResults(ctx, plan) {
   (plan.actions || []).slice(0, 5).forEach((a, i) => {
     const locked = i >= 3;
     const div = document.createElement('div');
-    div.className = 'action-card' + (locked ? ' locked' : '');
-    const pc = priCls[a.priority] || 'pri-medium';
-    const pl = priLbl[a.priority] || 'Next step';
+    const urgentClass = (!locked && a.urgent) ? ' urgent' : '';
+    div.className = 'action-card' + (locked ? ' locked' : '') + urgentClass;
+    const pc = a.urgent ? 'pri-urgent' : (priCls[a.priority] || 'pri-medium');
+    const pl = a.urgent ? 'Act now' : (priLbl[a.priority] || 'Next step');
     div.innerHTML = `
       <div class="a-head">
-        <div class="a-num">${i+1}</div>
+        <div class="a-num${a.urgent && !locked ? ' red' : ''}">${i+1}</div>
         <div>
           <div class="pri-tag ${pc}">${pl}</div>
           <div class="a-title">${a.title}</div>
@@ -547,27 +704,7 @@ function toggleExplainer(btn) {
   btn.textContent = open ? 'What does my profile type mean? ↓' : 'Hide profile explanation ↑';
 }
 
-// ── FALLBACK ──────────────────────────────────────────
-function renderFallback(ctx) {
-  const actions = [];
-  if (ctx.hasFedStudent && ctx.disposable < 500)
-    actions.push({ title:'Check income-driven repayment eligibility', body:`With ${fmt(ctx.income)}/month take-home and a household of ${ctx.family}, you may qualify for $0/month payments on your federal loans under IDR. Visit studentaid.gov or call your servicer — it takes about 10 minutes.`, impact:'Could reduce payment to $0/month', priority:'high' });
-  if (ctx.hasFedStudent && ctx.hasPublicNP)
-    actions.push({ title:'Screen for Public Service Loan Forgiveness', body:'Working for government or a nonprofit makes you potentially eligible for full federal loan forgiveness after 120 qualifying payments. Verify your employer at studentaid.gov/pslf — takes 5 minutes.', impact:'Full forgiveness after 10 years', priority:'high' });
-  if (ctx.inCollections)
-    actions.push({ title:'Send a debt validation letter immediately', body:'Under the FDCPA, any collector must verify a debt before continuing collection activity. A certified validation letter legally pauses all contact and often reveals errors.', impact:'Legally halts collection activity', priority:'high' });
-  while (actions.length < 3)
-    actions.push({ title:'Build your complete debt inventory', body:'Pull all three credit reports free at AnnualCreditReport.com and list every creditor, balance, and status. This takes 30 minutes and is required before any negotiation or dispute strategy can begin.', impact:'Foundation for every next step', priority:'medium' });
-  actions.push({ title:'Call your top creditor\'s hardship line', body:'Most major creditors have unpublished hardship programs that can freeze interest and reduce minimum payments for 6–12 months. Call their hardship line — not regular customer service.', impact:'Could cut payments by 30–50%', priority:'medium' });
-  actions.push({ title:'Dispute any errors on your credit reports', body:'Studies show 30–40% of credit reports contain errors. Each inaccuracy you remove improves your negotiating position with creditors.', impact:'Improves your negotiating leverage', priority:'low' });
 
-  const info = ARCHETYPES[currentArchetype] || ARCHETYPES.DEFAULT;
-  renderResults(ctx, {
-    headline: `${info.short} — here's your action plan`,
-    summary: info.desc,
-    actions: actions.slice(0,5),
-  });
-}
 
 // ── TRIAL SIGNUP ──────────────────────────────────────
 function handleTrialSignup() {

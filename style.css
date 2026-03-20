@@ -28,6 +28,11 @@
   --r-lg:       20px;
   --max:        620px;
   --pad:        24px;
+
+  /* Deep red accent */
+  --crimson:    #9B1D20;
+  --crimson-lt: #F5E6E6;
+  --crimson-md: #C0393C;
 }
 
 html { font-size: 16px; -webkit-font-smoothing: antialiased; background: var(--cream); }
@@ -321,9 +326,21 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .section-sub { font-size: 13px; color: var(--warm-brown); margin-bottom: 16px; line-height: 1.5; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
 .field label { font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--taupe-dk); display: block; margin-bottom: 5px; }
-.pfx-wrap { position: relative; display: flex; align-items: center; }
-.pfx { position: absolute; left: 10px; font-size: 14px; font-weight: 500; color: var(--taupe-dk); pointer-events: none; z-index: 1; }
-.pfx-wrap input { padding-left: 22px; }
+.pfx-wrap {
+  display: flex; align-items: center;
+  background: var(--taupe-lt); border: 1px solid var(--taupe);
+  border-radius: var(--r-sm); overflow: hidden; transition: all .15s;
+}
+.pfx-wrap:focus-within { background: var(--cream); border-color: var(--espresso); }
+.pfx {
+  padding: 9px 0 9px 11px; font-size: 14px; font-weight: 500;
+  color: var(--taupe-dk); flex-shrink: 0; line-height: 1; user-select: none;
+}
+.pfx-wrap input {
+  border: none !important; background: transparent !important;
+  padding: 9px 10px 9px 4px !important; flex: 1; min-width: 0;
+}
+.pfx-wrap input:focus { outline: none !important; box-shadow: none !important; }
 .field input, .field select {
   width: 100%; font-family: var(--font-sans); font-size: 14px; font-weight: 500;
   color: var(--espresso); background: var(--taupe-lt);
@@ -515,3 +532,34 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
   .tc-head, .tc-row { grid-template-columns: 1.2fr 1fr 1fr; font-size: 11px; }
   .hero-title { font-size: 36px; }
 }
+
+/* ── UPGRADE WALL EXTRA ──────────────────────────── */
+.uw-sub-opt {
+  font-size: 12px; color: var(--taupe-dk); text-align: center;
+  margin-top: 8px; line-height: 1.5;
+}
+.uw-sub-link {
+  background: none; border: none; cursor: pointer; font-family: var(--font-sans);
+  font-size: 12px; color: var(--amber); text-decoration: underline; padding: 0;
+}
+.uw-sub-link:hover { color: var(--amber-dk); }
+
+/* Deep red usage */
+.tag-red { background: var(--crimson); color: #fff; }
+.a-num.red { background: var(--crimson-lt); border-color: var(--crimson); color: var(--crimson); }
+.pri-tag.pri-urgent { background: var(--crimson); color: #fff; }
+
+/* Action card — urgent highlight */
+.action-card.urgent { border-color: var(--crimson); }
+.action-card.urgent .a-num { background: var(--crimson-lt); border-color: var(--crimson); color: var(--crimson); }
+.action-card.urgent .a-impact { background: var(--crimson-lt); border-color: var(--crimson); color: var(--crimson); }
+
+/* Step progress active dot */
+.ps.active::before {
+  content: ''; display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; background: var(--crimson); margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* Error messages use crimson */
+.err-msg { border-left-color: var(--crimson); color: var(--crimson); background: var(--crimson-lt); }
