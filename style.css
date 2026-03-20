@@ -694,3 +694,51 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
   padding: 7px 9px; appearance: none; transition: all .15s;
 }
 .debt-grid-2 select:focus { outline: none; background: var(--cream); border-color: var(--brown); }
+
+/* ── PROFILE BADGE DEVICE (results page) ─────────── */
+.profile-card-wrap {
+  max-width: var(--max); margin: 0 auto; padding: 20px var(--pad);
+  border-bottom: 1px solid var(--offwhite); display: flex; gap: 16px;
+  align-items: flex-start;
+}
+.p-badge-device {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center;
+  background: var(--espresso); border-radius: var(--r-md);
+  padding: 10px 12px; min-width: 64px; text-align: center;
+}
+.p-badge-code {
+  font-family: var(--font-serif); font-size: 14px; color: var(--cream);
+  letter-spacing: .02em; line-height: 1.2; margin-bottom: 5px;
+}
+.p-badge-label {
+  font-size: 9px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--sand); line-height: 1.3;
+}
+
+/* ── TONED-DOWN ENROLL CARD ──────────────────────── */
+.rec-intro {
+  font-size: 13px; color: var(--sand); line-height: 1.65; margin-bottom: 16px;
+}
+.rec-price-row {
+  display: flex; align-items: baseline; gap: 6px;
+  justify-content: center; margin-bottom: 16px;
+}
+.rec-price-sm {
+  font-family: var(--font-serif); font-size: 28px; color: var(--cream);
+}
+.rec-per-sm {
+  font-size: 13px; color: var(--sand);
+}
+.btn-secondary.rec-btn-soft {
+  width: 100%; justify-content: center; padding: 12px !important;
+  font-size: 14px !important; margin-bottom: 10px;
+  background: transparent; border-color: var(--sand); color: var(--cream);
+}
+.btn-secondary.rec-btn-soft:hover {
+  background: rgba(255,255,255,0.08); border-color: var(--cream);
+  box-shadow: none; transform: none;
+}
+.rec-note {
+  font-size: 11px; color: var(--stone); text-align: center;
+}

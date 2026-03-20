@@ -672,9 +672,11 @@ function renderResults(ctx, plan) {
     <div class="m-cell"><div class="m-val ${dspCls}">${fmt(Math.abs(ctx.disposable))}</div><div class="m-lbl">${ctx.disposable>=0?'Monthly surplus':'Monthly shortfall'}</div></div>`;
 
   const profileEl = document.getElementById('profile-card'); profileEl.innerHTML = `
-    <div class="p-badge">${ctx.info.name.split(' ').slice(-1)[0]}</div>
+    <div class="p-badge-device">
+      <div class="p-badge-code">${ctx.archetype}</div>
+      <div class="p-badge-label">Your financial profile</div>
+    </div>
     <div>
-      <div class="p-eyebrow">Your financial profile</div>
       <div class="p-name">${ctx.info.name}</div>
       <div class="p-desc">${plan.summary || ctx.info.desc}</div>
     </div>`;
@@ -1068,20 +1070,12 @@ function buildReportPage() {
       body: 'Word-for-word call scripts for hardship programs, settlement offers, creditor disputes, and debt validation follow-ups. Each script is matched to your profile type and the specific type of account — a credit card hardship call reads very differently from a medical billing dispute.',
     },
     {
-      title: 'Pre-filled letter templates',
-      body: 'Six production-ready letters — debt validation, debt dispute, cease and desist, goodwill deletion, financial hardship request, and settlement offer. Pre-filled with your account details where possible, with clear guidance on where to send each one and exactly how to send it.',
-    },
-    {
       title: 'Timed check-ins and nudges',
       body: `Based on the PAIR research behind your ${info.name} profile, you respond best to ${info.tone === 'cooperative' ? 'calm, supportive prompts that acknowledge your situation without pressure' : info.tone === 'informative' ? 'clear, data-driven updates with specific next steps' : 'mutual-benefit framing that connects action to outcomes'}. Your check-ins are calibrated accordingly — sent at the moments most likely to keep you moving.`,
     },
     {
       title: 'Personal coaching layer',
       body: 'Ask questions, work through sticking points, and get guidance on specific creditors and situations — from a coaching layer that knows your full debt picture, your profile type, and where you are in the plan. Not generic advice. Contextual guidance for your specific situation.',
-    },
-    {
-      title: 'Playbooks for every scenario',
-      body: 'Step-by-step guides for debt settlement negotiations, medical billing disputes, student loan appeals, credit report repair, statute of limitations strategy, and more. Each playbook is built for people in situations like yours — not theoretical frameworks.',
     },
     {
       title: 'Monthly progress tracking',
@@ -1101,19 +1095,11 @@ function buildReportPage() {
     </div>
 
     <div class="report-enroll-card">
-      <div class="rec-eyebrow">Ongoing support</div>
-      <div class="rec-price">$39<span class="rec-per">/month</span></div>
-      <div class="rec-tagline">Cancel anytime. No contracts. No percentage of your debt.</div>
-      <div class="rec-compare">Traditional debt agencies charge 15–25% of your total balance — on ${fmt(totalDebt)}, that is <strong>${fmt(Math.round(totalDebt * 0.20))}</strong> or more. DebtSnap is $39/month.</div>
-      <button class="btn-primary red rec-btn" onclick="showPage('trial')">Enroll in ongoing support →</button>
-      <div class="rec-items">
-        <span>Scripts</span><span>·</span>
-        <span>Templates</span><span>·</span>
-        <span>Coaching</span><span>·</span>
-        <span>Playbooks</span><span>·</span>
-        <span>Check-ins</span><span>·</span>
-        <span>Progress tracking</span>
-      </div>
+      <div class="rec-eyebrow">Optional — ongoing support</div>
+      <div class="rec-intro">When you're ready to go further, ongoing support gives you the tools to execute every step: coaching, check-ins timed to your profile, and guidance as your situation evolves.</div>
+      <div class="rec-price-row"><span class="rec-price-sm">$39</span><span class="rec-per-sm">/month &nbsp;·&nbsp; cancel anytime</span></div>
+      <button class="btn-secondary rec-btn-soft" onclick="showPage('trial')">Learn more about ongoing support</button>
+      <div class="rec-note">No contracts. No percentage of your debt. Start when you're ready.</div>
     </div>`;
 }
 
@@ -1336,10 +1322,8 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
 <p style="font-style:italic">Your report covers the foundational steps. Execution is what changes the numbers — and that is what the ongoing support subscription covers.</p>
 <div class="next-grid">
   <div class="next-item"><div class="next-title">Negotiation scripts</div><div class="next-body">Word-for-word call scripts for hardship programs, settlement offers, and creditor disputes — matched to your profile type and account category.</div></div>
-  <div class="next-item"><div class="next-title">Letter templates</div><div class="next-body">Six production-ready letters — debt validation, dispute, cease and desist, goodwill deletion, hardship request, and settlement offer — pre-filled for your accounts.</div></div>
   <div class="next-item"><div class="next-title">Timed check-ins</div><div class="next-body">Prompts and nudges calibrated to your ${ctx.info.name} profile, sent at the moments most likely to keep you moving forward.</div></div>
   <div class="next-item"><div class="next-title">Personal coaching</div><div class="next-body">Contextual guidance for your specific situation — not generic advice. Ask questions, work through sticking points, handle responses from creditors.</div></div>
-  <div class="next-item"><div class="next-title">Playbooks</div><div class="next-body">Step-by-step guides for debt settlement, medical billing disputes, student loan appeals, credit repair, and statute of limitations strategy.</div></div>
   <div class="next-item"><div class="next-title">Progress tracking</div><div class="next-body">A running view of your debt picture as it changes — balances, DTI, completed steps. Seeing the numbers move is one of the most powerful motivators.</div></div>
 </div>
 
@@ -1348,7 +1332,7 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
   <div class="enroll-desc">Cancel anytime · No contracts · No percentage of your debt</div>
   <div class="enroll-compare">Traditional debt agencies charge 15–25% of your total balance. On ${fmt(ctx.total)}, that is ${fmt(Math.round(ctx.total*0.2))} or more.</div>
   <a href="https://debtsnap.com" class="enroll-cta">Enroll in ongoing support →</a>
-  <div class="enroll-items">Scripts · Templates · Coaching · Playbooks · Check-ins · Progress tracking</div>
+  <div class="enroll-items">Negotiation scripts · Coaching · Check-ins · Progress tracking</div>
 </div>
 
 <div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm and does not provide legal representation. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>
@@ -1380,17 +1364,32 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
     // Serverless not available — fall back to print dialog
   }
 
-  // Fallback: open printable HTML in new tab with print dialog
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url  = URL.createObjectURL(blob);
-  const win  = window.open(url, '_blank');
-  if (win) {
-    win.onload = () => {
-      win.focus();
-      setTimeout(() => win.print(), 500);
-    };
+  // Fallback: write to hidden iframe and trigger print-to-PDF
+  const blob    = new Blob([htmlContent], { type: 'text/html' });
+  const blobUrl = URL.createObjectURL(blob);
+
+  // Try iframe approach first (avoids popup blocker)
+  let frame = document.getElementById('pdf-print-frame');
+  if (!frame) {
+    frame = document.createElement('iframe');
+    frame.id = 'pdf-print-frame';
+    frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;height:1123px;border:none;visibility:hidden';
+    document.body.appendChild(frame);
   }
-  URL.revokeObjectURL(url);
+  frame.src = blobUrl;
+  frame.onload = () => {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+    } catch(e) {
+      // Final fallback: download as .html
+      const a    = document.createElement('a');
+      a.href     = blobUrl;
+      a.download = safeFilename.replace('.pdf', '.html');
+      a.click();
+    }
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+  };
 }
 
 
