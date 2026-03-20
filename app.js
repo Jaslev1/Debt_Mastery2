@@ -1128,67 +1128,203 @@ async function downloadReport() {
 <title>DebtSnap Debt Relief Report</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',Georgia,sans-serif;color:#1E110A;font-size:13px;line-height:1.6;background:#fff;padding:0}
-  .page{max-width:720px;margin:0 auto;padding:40px 48px}
-  .cover{background:#1E110A;color:#F7F3EE;padding:48px;margin-bottom:0;break-after:page}
-  .cover-eyebrow{font-size:10px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:#8A7A6A;margin-bottom:16px}
-  .cover h1{font-family:'DM Serif Display',Georgia,serif;font-size:42px;letter-spacing:-0.02em;line-height:1.1;margin-bottom:12px}
-  .cover-sub{font-size:14px;color:#8A7A6A;margin-bottom:32px}
-  .cover-meta{font-size:12px;color:#4A3728;border-top:1px solid #2D2520;padding-top:16px;display:flex;gap:24px}
-  h2{font-family:'DM Serif Display',Georgia,serif;font-size:20px;letter-spacing:-0.01em;color:#1E110A;margin:32px 0 8px;padding-bottom:8px;border-bottom:1.5px solid #1E110A}
-  h3{font-size:14px;font-weight:600;margin:14px 0 5px;color:#1E110A}
-  p{margin-bottom:10px;color:#7A6A58}
-  .metrics{display:flex;gap:12px;margin:16px 0}
-  .metric{flex:1;background:#F7F3EE;border-radius:8px;padding:14px;text-align:center}
-  .metric .v{font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:2px}
-  .metric .l{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:#7A6A58}
-  table{width:100%;border-collapse:collapse;font-size:12px;margin:12px 0}
-  th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#7A6A58;padding:6px 0;border-bottom:1.5px solid #1E110A}
-  td{padding:9px 0;border-bottom:1px solid #EDE5DA;vertical-align:top}
-  .context-box{background:#EDE5DA;border-left:2px solid #5C3D2E;padding:10px 13px;border-radius:0 6px 6px 0;margin:10px 0;font-size:12px;color:#5C3D2E;line-height:1.65}
-  .profile-device{display:flex;align-items:center;gap:14px;border:1.5px solid #1E110A;border-radius:10px;padding:14px 18px;margin:12px 0}
-  .pcode{font-family:'DM Serif Display',serif;font-size:12px;color:#F7F3EE;background:#1E110A;padding:6px 10px;border-radius:6px;text-align:center;line-height:1.3}
-  .pname{font-size:14px;font-weight:600}
-  .pdesc{font-size:12px;color:#7A6A58;line-height:1.6;margin:8px 0}
-  .traits{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
-  .trait{background:#F7F3EE;border-radius:6px;padding:10px}
-  .trait-dim{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#7A6A58}
-  .trait-val{font-size:12px;font-weight:600;color:#5C3D2E;margin:2px 0}
-  .trait-desc{font-size:11px;color:#7A6A58;line-height:1.5}
-  .action{border:1.5px solid #1E110A;border-radius:10px;padding:14px;margin-bottom:12px;break-inside:avoid}
-  .action.urgent{border-color:#8B1A1A}
-  .a-head{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
-  .a-num{width:24px;height:24px;border-radius:50%;background:#EDE5DA;border:1.5px solid #5C3D2E;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#5C3D2E;flex-shrink:0}
-  .action.urgent .a-num{background:#8B1A1A;border-color:#8B1A1A;color:#fff}
-  .a-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 7px;border-radius:3px;background:#1E110A;color:#fff;display:inline-block;margin-bottom:3px}
-  .a-tag.urgent{background:#8B1A1A}
-  .a-title{font-size:13px;font-weight:600;line-height:1.4}
-  .a-body{font-size:12px;color:#7A6A58;line-height:1.65;margin:6px 0;padding-left:34px}
-  .a-impact{display:inline-block;margin:4px 0 0 34px;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;border:1px solid #5C3D2E;color:#5C3D2E}
-  .a-next{margin-top:10px;padding:10px 12px 10px 34px;border-top:1px dashed #EDE5DA}
-  .a-next-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#5C3D2E;margin-bottom:4px}
-  .a-next-body{font-size:11px;color:#7A6A58;line-height:1.65}
-  .rights-item{padding:12px 0;border-bottom:1px solid #EDE5DA;break-inside:avoid}
-  .rights-item.urgent{background:#FAF3F3;padding:12px;border-radius:6px;border:1px solid #F0DADA;margin-bottom:8px}
-  .rights-law{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#5C3D2E}
-  .rights-title{font-size:13px;font-weight:600;margin:4px 0}
-  .rights-body{font-size:12px;color:#7A6A58;line-height:1.65;margin-bottom:6px}
-  .rights-action{font-size:11px;font-weight:600;color:#2A6040}
-  .next-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
-  .next-item{background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px}
-  .next-title{font-size:12px;font-weight:600;margin-bottom:4px}
-  .next-body{font-size:11px;color:#7A6A58;line-height:1.55}
-  .enroll-box{background:#1E110A;border-radius:12px;padding:28px;text-align:center;color:#F7F3EE;margin-top:16px}
-  .enroll-price{font-family:'DM Serif Display',serif;font-size:44px;margin-bottom:6px}
-  .enroll-price span{font-family:'DM Sans',sans-serif;font-size:18px;color:#8A7A6A;font-weight:400}
-  .enroll-desc{font-size:12px;color:#8A7A6A;margin-bottom:10px}
-  .enroll-compare{font-size:12px;color:#4A3728;margin-bottom:18px}
-  .enroll-cta{display:inline-block;background:#8B1A1A;color:#F7F3EE;font-weight:600;font-size:14px;padding:13px 32px;border-radius:6px;text-decoration:none;margin-bottom:12px}
-  .enroll-items{font-size:10px;color:#4A3728}
-  .disclaimer{font-size:11px;color:#8A7A6A;font-style:italic;margin-top:32px;padding-top:16px;border-top:1px solid #EDE5DA;line-height:1.6}
-  .tag-b{background:#1E110A;color:#fff;font-size:9px;font-weight:700;padding:2px 7px;border-radius:3px;text-transform:uppercase;letter-spacing:.05em}
-  @media print{.page{padding:24px 32px}.cover{padding:36px}}
+
+  /* ── Palette matches on-screen app ── */
+  :root {
+    --cream:   #F7F3EE;
+    --offwhite:#EDE5DA;
+    --sand:    #C4B5A0;
+    --stone:   #7A6A58;
+    --brown:   #5C3D2E;
+    --bark:    #3D2314;
+    --espresso:#1E110A;
+    --red:     #8B1A1A;
+    --red-lt:  #F0DADA;
+    --red-xlt: #FAF3F3;
+    --green:   #2A6040;
+  }
+
+  /* ── Reset ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Page setup ── */
+  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  body {
+    font-family: 'DM Sans', Georgia, sans-serif;
+    color: var(--espresso);
+    font-size: 13px;
+    line-height: 1.65;
+    background: var(--cream);
+  }
+  @page {
+    size: A4;
+    margin: 18mm 18mm 20mm 18mm;
+  }
+  @page :first { margin-top: 0; margin-left: 0; margin-right: 0; }
+
+  /* ── Layout ── */
+  .page { max-width: 100%; padding: 0; }
+
+  /* ── Cover — full-bleed espresso, breaks to new page after ── */
+  .cover {
+    background: var(--espresso);
+    color: var(--cream);
+    padding: 52px 48px 44px;
+    margin: -18mm -18mm 0;    /* bleed to page edge on print */
+    break-after: page;
+    page-break-after: always;
+  }
+  .cover-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--sand); margin-bottom: 20px; }
+  .cover h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 44px; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 16px; color: var(--cream); }
+  .cover-sub { font-size: 14px; color: var(--sand); margin-bottom: 40px; line-height: 1.6; max-width: 480px; }
+  .cover-meta { font-size: 12px; color: var(--bark); border-top: 1px solid #2D2520; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 20px; }
+  .cover-divider { width: 40px; height: 3px; background: var(--red); margin-bottom: 24px; border-radius: 2px; }
+
+  /* ── Section headings ── */
+  h2 {
+    font-family: 'DM Serif Display', Georgia, serif;
+    font-size: 19px; letter-spacing: -0.01em; color: var(--espresso);
+    margin: 36px 0 10px; padding-bottom: 8px;
+    border-bottom: 1.5px solid var(--espresso);
+    break-after: avoid; page-break-after: avoid;
+  }
+  h3 { font-size: 14px; font-weight: 600; margin: 14px 0 5px; color: var(--espresso); }
+  p { margin-bottom: 10px; color: var(--stone); }
+
+  /* ── Metrics ── */
+  .metrics { display: flex; gap: 10px; margin: 14px 0; }
+  .metric { flex: 1; background: var(--offwhite); border-radius: 8px; padding: 13px; text-align: center; border: 1px solid var(--sand); }
+  .metric .v { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 3px; color: var(--espresso); }
+  .metric .l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--stone); }
+
+  /* ── Debt table ── */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
+  th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--stone); padding: 6px 0; border-bottom: 1.5px solid var(--espresso); }
+  td { padding: 8px 0; border-bottom: 1px solid var(--offwhite); vertical-align: top; color: var(--espresso); }
+  tr:last-child td { border-bottom: none; }
+
+  /* ── Context boxes ── */
+  .context-box {
+    background: var(--offwhite); border-left: 2px solid var(--brown);
+    padding: 10px 13px; border-radius: 0 6px 6px 0;
+    margin: 10px 0; font-size: 12px; color: var(--brown); line-height: 1.65;
+    break-inside: avoid;
+  }
+  .context-box strong { color: var(--espresso); }
+
+  /* ── Profile device ── */
+  .profile-device {
+    display: flex; align-items: center; gap: 14px;
+    border: 1.5px solid var(--espresso); border-radius: 10px;
+    padding: 14px 18px; margin: 12px 0;
+    break-inside: avoid;
+  }
+  .pcode {
+    font-family: 'DM Serif Display', serif; font-size: 13px;
+    color: var(--cream); background: var(--espresso);
+    padding: 7px 11px; border-radius: 6px; text-align: center;
+    line-height: 1.25; flex-shrink: 0;
+  }
+  .pcode-sub { font-size: 8px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--sand); margin-top: 3px; }
+  .pname { font-size: 14px; font-weight: 600; color: var(--espresso); margin-bottom: 3px; }
+  .pdesc { font-size: 12px; color: var(--stone); line-height: 1.6; }
+
+  /* ── Trait grid ── */
+  .traits { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .trait { background: var(--offwhite); border-radius: 6px; padding: 10px; break-inside: avoid; }
+  .trait-dim { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone); }
+  .trait-val { font-size: 12px; font-weight: 600; color: var(--brown); margin: 2px 0; }
+  .trait-desc { font-size: 11px; color: var(--stone); line-height: 1.5; }
+  .guide-box { background: var(--offwhite); border-left: 2px solid var(--brown); border-radius: 0 6px 6px 0; padding: 10px 13px; font-size: 12px; color: var(--stone); line-height: 1.6; margin-top: 10px; }
+  .guide-lbl { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brown); margin-bottom: 4px; }
+
+  /* ── Action cards ── */
+  .action {
+    border: 1.5px solid var(--espresso); border-radius: 10px;
+    padding: 14px; margin-bottom: 12px;
+    break-inside: avoid; page-break-inside: avoid;
+    background: var(--cream);
+  }
+  .action.urgent { border-color: var(--red); }
+  .a-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
+  .a-num {
+    width: 24px; height: 24px; border-radius: 50%;
+    background: var(--offwhite); border: 1.5px solid var(--brown);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--brown); flex-shrink: 0;
+  }
+  .action.urgent .a-num { background: var(--red); border-color: var(--red); color: #fff; }
+  .a-tag {
+    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
+    padding: 2px 7px; border-radius: 3px; background: var(--espresso); color: var(--cream);
+    display: inline-block; margin-bottom: 3px;
+  }
+  .a-tag.urgent { background: var(--red); }
+  .a-title { font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--espresso); }
+  .a-body { font-size: 12px; color: var(--stone); line-height: 1.65; margin: 6px 0; padding-left: 34px; }
+  .a-impact {
+    display: inline-block; margin: 4px 0 0 34px; font-size: 11px; font-weight: 700;
+    padding: 2px 9px; border-radius: 20px; border: 1px solid var(--brown); color: var(--brown);
+  }
+  .a-next { margin-top: 10px; padding: 10px 12px 10px 34px; border-top: 1px dashed var(--offwhite); }
+  .a-next-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brown); margin-bottom: 4px; }
+  .a-next-body { font-size: 11px; color: var(--stone); line-height: 1.65; }
+
+  /* ── Rights ── */
+  .rights-section { break-before: page; page-break-before: always; }
+  .rights-item { padding: 12px 0; border-bottom: 1px solid var(--offwhite); break-inside: avoid; page-break-inside: avoid; }
+  .rights-item:last-child { border-bottom: none; }
+  .rights-item.urgent { background: var(--red-xlt); padding: 12px; border-radius: 6px; border: 1px solid var(--red-lt); margin-bottom: 8px; }
+  .rights-law { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--brown); }
+  .rights-badge { display: inline-block; font-size: 9px; font-weight: 700; background: var(--red); color: var(--cream); padding: 1px 7px; border-radius: 3px; margin-left: 8px; }
+  .rights-title { font-size: 13px; font-weight: 600; margin: 4px 0; color: var(--espresso); }
+  .rights-body { font-size: 12px; color: var(--stone); line-height: 1.65; margin-bottom: 6px; }
+  .rights-action { font-size: 11px; font-weight: 600; color: var(--green); }
+
+  /* ── What's next ── */
+  .next-section { break-before: page; page-break-before: always; }
+  .next-intro { font-size: 13px; color: var(--stone); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
+  .next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
+  .next-item { background: var(--cream); border: 1.5px solid var(--espresso); border-radius: 8px; padding: 12px; break-inside: avoid; }
+  .next-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--espresso); }
+  .next-body { font-size: 11px; color: var(--stone); line-height: 1.55; }
+
+  /* ── Enroll box ── */
+  .enroll-box {
+    background: var(--espresso); border-radius: 12px;
+    padding: 28px; text-align: center; color: var(--cream); margin-top: 16px;
+    break-inside: avoid;
+  }
+  .enroll-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--sand); margin-bottom: 10px; }
+  .enroll-price { font-family: 'DM Serif Display', serif; font-size: 40px; margin-bottom: 4px; }
+  .enroll-price span { font-family: 'DM Sans', sans-serif; font-size: 16px; color: var(--sand); font-weight: 400; }
+  .enroll-desc { font-size: 12px; color: var(--sand); margin-bottom: 10px; line-height: 1.6; }
+  .enroll-compare { font-size: 12px; color: var(--bark); margin-bottom: 18px; line-height: 1.5; }
+  .enroll-compare strong { color: var(--cream); }
+  .enroll-cta {
+    display: inline-block; background: var(--red); color: var(--cream);
+    font-weight: 600; font-size: 14px; padding: 12px 32px;
+    border-radius: 6px; text-decoration: none; margin-bottom: 12px;
+  }
+  .enroll-note { font-size: 10px; color: var(--bark); }
+
+  /* ── Disclaimer ── */
+  .disclaimer {
+    font-size: 11px; color: var(--sand); font-style: italic;
+    margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--offwhite);
+    line-height: 1.6;
+  }
+
+  /* ── Print optimisation ── */
+  @media print {
+    body { background: var(--cream); }
+    .cover { margin: -18mm -18mm 0; }
+    h2 { break-after: avoid; }
+    .action, .rights-item, .trait, .next-item, .context-box { break-inside: avoid; }
+    .rights-section, .next-section { break-before: page; }
+    table { break-inside: auto; }
+    tr { break-inside: avoid; }
+  }
 </style>
 </head><body>
 
@@ -1240,7 +1376,7 @@ ${annualInt > 0 ? `<div class="context-box">Your accounts are costing you approx
 <!-- PROFILE -->
 <h2>Your Financial Profile</h2>
 <div class="profile-device">
-  <div class="pcode">${ctx.archetype}</div>
+  <div class="pcode">${ctx.archetype}<div class="pcode-sub">Your financial<br>profile</div></div>
   <div class="pname">${ctx.info.name}</div>
 </div>
 <div class="pdesc">${ctx.info.desc}</div>
@@ -1282,7 +1418,7 @@ ${(plan.actions||[]).slice(0,5).map((a, i) => {
 }).join('')}
 
 <!-- LEGAL RIGHTS -->
-<h2>Your Legal Rights</h2>
+<div class="rights-section"><h2>Your Legal Rights</h2>
 ${ctx.inCollections ? `
 <div class="rights-item urgent">
   <div class="rights-law">FDCPA §809(b) — Applies to your accounts</div>
@@ -1317,8 +1453,9 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
   <div class="rights-action">Call billing and ask for a "financial assistance application" by name. This is a legal requirement.</div>
 </div>` : ''}
 
+</div>
 <!-- WHAT COMES NEXT -->
-<h2>What Comes Next</h2>
+<div class="next-section"><h2>What Comes Next</h2>
 <p style="font-style:italic">Your report covers the foundational steps. Execution is what changes the numbers — and that is what the ongoing support subscription covers.</p>
 <div class="next-grid">
   <div class="next-item"><div class="next-title">Negotiation scripts</div><div class="next-body">Word-for-word call scripts for hardship programs, settlement offers, and creditor disputes — matched to your profile type and account category.</div></div>
@@ -1335,7 +1472,7 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
   <div class="enroll-items">Negotiation scripts · Coaching · Check-ins · Progress tracking</div>
 </div>
 
-<div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm and does not provide legal representation. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>
+</div><div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm and does not provide legal representation. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>
 
 </div><!-- end .page -->
 </body></html>`;
