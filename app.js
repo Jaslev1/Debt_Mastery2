@@ -842,11 +842,19 @@ function buildReportPage() {
   const highestRate     = ctx.debts.reduce((best, d) => (!best || (d.rate && d.rate > best.rate)) ? d : best, null);
 
   // Years to pay off at minimum only (rough: min pay barely covers interest for high-rate debt)
-  function payoffMonths(balance, rate, monthly) {
-    if (!monthly || monthly <= 0 || !rate) return null;
-    const r = rate / 100 / 12;
-    if (r <= 0) return Math.ceil(balance / monthly);
-    if (monthly <= balance * r) return null; // never pays off
+  // Default rates by debt type when user selects "not sure"
+  const DEFAULT_RATES = {
+    'credit-card': 20, 'student-federal': 6, 'student-private': 9,
+    'medical': 0, 'personal': 14, 'other': 18
+  };
+
+  function payoffMonths(balance, rate, monthly, debtType) {
+    if (!monthly || monthly <= 0) return null;
+    // Use default rate for type if not specified
+    const effectiveRate = rate || DEFAULT_RATES[debtType] || 18;
+    const r = effectiveRate / 100 / 12;
+    if (r <= 0) return Math.ceil(balance / monthly); // 0% interest
+    if (monthly <= balance * r) return null; // payment too low, never pays off
     return Math.ceil(-Math.log(1 - (balance * r / monthly)) / Math.log(1 + r));
   }
 
@@ -880,7 +888,7 @@ function buildReportPage() {
   // Debt table with payoff column
   document.getElementById('report-debt-rows').innerHTML =
     ctx.debts.map(d => {
-      const mos    = d.rate && d.minPay ? payoffMonths(d.balance, d.rate, d.minPay) : null;
+      const mos    = d.minPay ? payoffMonths(d.balance, d.rate, d.minPay, d.type) : null;
       const mosStr = mos === null ? '—' : mos > 360 ? '30+ yrs' : mos > 24 ? Math.ceil(mos/12) + ' yrs' : mos + ' mos';
       return `<tr>
         <td>${d.label}</td>
@@ -1256,471 +1264,462 @@ function buildReportPage() {
 }
 
 
-// ── PDF DOWNLOAD ─────────────────────────────────────
+// ── PDF DOWNLOAD — jsPDF + html2canvas ──────────────────────
 async function downloadReport() {
   if (!currentCtx || !currentPlan) return;
   const ctx  = currentCtx;
   const plan = currentPlan;
+  const info = ctx.info;
 
-  // Build self-contained printable HTML for the PDF
-  const statusMap = { current:'Current', '30':'30 days late', '60':'60 days late', '90':'90+ days late', collections:'In collections', 'charged-off':'Charged off' };
-  const priLbl    = { high:'High priority', medium:'Next step', low:'Also consider' };
-  const annualInt = ctx.debts.filter(d=>d.rate).reduce((s,d)=>s+d.balance*(d.rate/100),0);
-
-  function payoffMos(bal, rate, monthly) {
-    if (!monthly || !rate) return null;
-    const r = rate/100/12;
-    if (r <= 0) return Math.ceil(bal/monthly);
-    if (monthly <= bal*r) return null;
-    return Math.ceil(-Math.log(1-(bal*r/monthly))/Math.log(1+r));
-  }
-
-  const htmlContent = `<!DOCTYPE html><html lang="en"><head>
-<meta charset="UTF-8">
-<title>DebtSnap Debt Relief Report</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
-
-  /* ── Palette matches on-screen app ── */
-  :root {
-    --cream:   #F7F3EE;
-    --offwhite:#EDE5DA;
-    --sand:    #C4B5A0;
-    --stone:   #7A6A58;
-    --brown:   #5C3D2E;
-    --bark:    #3D2314;
-    --espresso:#1E110A;
-    --red:     #8B1A1A;
-    --red-lt:  #F0DADA;
-    --red-xlt: #FAF3F3;
-    --green:   #2A6040;
-  }
-
-  /* ── Reset ── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-  /* ── Page setup ── */
-  html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  body {
-    font-family: 'DM Sans', Georgia, sans-serif;
-    color: var(--espresso);
-    font-size: 13px;
-    line-height: 1.65;
-    background: var(--cream);
-  }
-  @page {
-    size: A4;
-    margin: 16mm 18mm 18mm 18mm;
-  }
-
-  /* ── Layout ── */
-  .page { max-width: 100%; padding: 0; }
-
-  /* ── Cover — full page, espresso background ── */
-  .cover {
-    background: var(--espresso);
-    color: var(--cream);
-    padding: 52px 48px 48px;
-    break-after: page;
-    page-break-after: always;
-    min-height: 240mm;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .cover-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--sand); margin-bottom: 20px; }
-  .cover h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 44px; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 16px; color: var(--cream); }
-  .cover-sub { font-size: 14px; color: var(--sand); margin-bottom: 40px; line-height: 1.6; max-width: 480px; }
-  .cover-meta { font-size: 12px; color: var(--bark); border-top: 1px solid #2D2520; padding-top: 16px; display: flex; flex-wrap: wrap; gap: 20px; }
-  .cover-divider { width: 40px; height: 3px; background: var(--red); margin-bottom: 24px; border-radius: 2px; }
-
-  /* ── Section headings ── */
-  h2 {
-    font-family: 'DM Serif Display', Georgia, serif;
-    font-size: 19px; letter-spacing: -0.01em; color: var(--espresso);
-    margin: 32px 0 10px; padding-bottom: 8px;
-    border-bottom: 1.5px solid var(--espresso);
-    break-after: avoid; page-break-after: avoid;
-    break-before: avoid;
-  }
-  h3 { font-size: 14px; font-weight: 600; margin: 14px 0 5px; color: var(--espresso); }
-  p { margin-bottom: 10px; color: var(--stone); }
-
-  /* ── Metrics ── */
-  .metrics { display: flex; gap: 10px; margin: 14px 0; }
-  .metric { flex: 1; background: var(--offwhite); border-radius: 8px; padding: 13px; text-align: center; border: 1px solid var(--sand); }
-  .metric .v { font-family: 'DM Serif Display', serif; font-size: 22px; margin-bottom: 3px; color: var(--espresso); }
-  .metric .l { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--stone); }
-
-  /* ── Debt table ── */
-  table { width: 100%; border-collapse: collapse; font-size: 12px; margin: 12px 0; }
-  th { text-align: left; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--stone); padding: 6px 0; border-bottom: 1.5px solid var(--espresso); }
-  td { padding: 8px 0; border-bottom: 1px solid var(--offwhite); vertical-align: top; color: var(--espresso); }
-  tr:last-child td { border-bottom: none; }
-
-  /* ── Context boxes ── */
-  .context-box {
-    background: var(--offwhite); border-left: 2px solid var(--brown);
-    padding: 10px 13px; border-radius: 0 6px 6px 0;
-    margin: 10px 0; font-size: 12px; color: var(--brown); line-height: 1.65;
-    break-inside: avoid;
-  }
-  .context-box strong { color: var(--espresso); }
-
-  /* ── Profile device ── */
-  .profile-device {
-    display: flex; align-items: center; gap: 14px;
-    border: 1.5px solid var(--espresso); border-radius: 10px;
-    padding: 14px 18px; margin: 12px 0;
-    break-inside: avoid;
-  }
-  .pcode {
-    font-family: 'DM Serif Display', serif; font-size: 13px;
-    color: var(--cream); background: var(--espresso);
-    padding: 7px 11px; border-radius: 6px; text-align: center;
-    line-height: 1.25; flex-shrink: 0;
-  }
-  .pcode-sub { font-size: 8px; font-weight: 600; letter-spacing: .07em; text-transform: uppercase; color: var(--sand); margin-top: 3px; }
-  .pname { font-size: 14px; font-weight: 600; color: var(--espresso); margin-bottom: 3px; }
-  .pdesc { font-size: 12px; color: var(--stone); line-height: 1.6; }
-
-  /* ── Trait grid ── */
-  .traits { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
-  .trait { background: var(--offwhite); border-radius: 6px; padding: 10px; break-inside: avoid; }
-  .trait-dim { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone); }
-  .trait-val { font-size: 12px; font-weight: 600; color: var(--brown); margin: 2px 0; }
-  .trait-desc { font-size: 11px; color: var(--stone); line-height: 1.5; }
-  .guide-box { background: var(--offwhite); border-left: 2px solid var(--brown); border-radius: 0 6px 6px 0; padding: 10px 13px; font-size: 12px; color: var(--stone); line-height: 1.6; margin-top: 10px; }
-  .guide-lbl { font-size: 9px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--brown); margin-bottom: 4px; }
-
-  /* ── Action cards ── */
-  .action {
-    border: 1.5px solid var(--espresso); border-radius: 10px;
-    padding: 14px; margin-bottom: 12px;
-    break-inside: avoid; page-break-inside: avoid;
-    background: var(--cream);
-    orphans: 3; widows: 3;
-  }
-  .action.urgent { border-color: var(--red); }
-  .a-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
-  .a-num {
-    width: 24px; height: 24px; border-radius: 50%;
-    background: var(--offwhite); border: 1.5px solid var(--brown);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: var(--brown); flex-shrink: 0;
-  }
-  .action.urgent .a-num { background: var(--red); border-color: var(--red); color: #fff; }
-  .a-tag {
-    font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em;
-    padding: 2px 7px; border-radius: 3px; background: var(--espresso); color: var(--cream);
-    display: inline-block; margin-bottom: 3px;
-  }
-  .a-tag.urgent { background: var(--red); }
-  .a-title { font-size: 13px; font-weight: 600; line-height: 1.4; color: var(--espresso); }
-  .a-body { font-size: 12px; color: var(--stone); line-height: 1.65; margin: 6px 0; padding-left: 34px; }
-  .a-impact {
-    display: inline-block; margin: 4px 0 0 34px; font-size: 11px; font-weight: 700;
-    padding: 2px 9px; border-radius: 20px; border: 1px solid var(--brown); color: var(--brown);
-  }
-  .a-next { margin-top: 10px; padding: 10px 12px 10px 34px; border-top: 1px dashed var(--offwhite); }
-  .a-next-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--brown); margin-bottom: 4px; }
-  .a-next-body { font-size: 11px; color: var(--stone); line-height: 1.65; }
-
-  /* ── Rights ── */
-  .rights-section { margin-top: 8px; }
-  .rights-item { padding: 12px 0; border-bottom: 1px solid var(--offwhite); break-inside: avoid; page-break-inside: avoid; }
-  .rights-item:last-child { border-bottom: none; }
-  .rights-item.urgent { background: var(--red-xlt); padding: 12px; border-radius: 6px; border: 1px solid var(--red-lt); margin-bottom: 8px; }
-  .rights-law { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--brown); }
-  .rights-badge { display: inline-block; font-size: 9px; font-weight: 700; background: var(--red); color: var(--cream); padding: 1px 7px; border-radius: 3px; margin-left: 8px; }
-  .rights-title { font-size: 13px; font-weight: 600; margin: 4px 0; color: var(--espresso); }
-  .rights-body { font-size: 12px; color: var(--stone); line-height: 1.65; margin-bottom: 6px; }
-  .rights-action { font-size: 11px; font-weight: 600; color: var(--green); }
-
-  /* ── What's next ── */
-  .next-section { margin-top: 8px; }
-  .next-intro { font-size: 13px; color: var(--stone); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
-  .next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
-  .next-item { background: var(--cream); border: 1.5px solid var(--espresso); border-radius: 8px; padding: 12px; break-inside: avoid; }
-  .next-title { font-size: 12px; font-weight: 600; margin-bottom: 4px; color: var(--espresso); }
-  .next-body { font-size: 11px; color: var(--stone); line-height: 1.55; }
-
-  /* ── Enroll box ── */
-  .enroll-box {
-    background: var(--espresso); border-radius: 12px;
-    padding: 28px; text-align: center; color: var(--cream); margin-top: 16px;
-    break-inside: avoid;
-  }
-  .enroll-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: var(--sand); margin-bottom: 10px; }
-  .enroll-price { font-family: 'DM Serif Display', serif; font-size: 40px; margin-bottom: 4px; }
-  .enroll-price span { font-family: 'DM Sans', sans-serif; font-size: 16px; color: var(--sand); font-weight: 400; }
-  .enroll-desc { font-size: 12px; color: var(--sand); margin-bottom: 10px; line-height: 1.6; }
-  .enroll-compare { font-size: 12px; color: var(--bark); margin-bottom: 18px; line-height: 1.5; }
-  .enroll-compare strong { color: var(--cream); }
-  .enroll-cta {
-    display: inline-block; background: var(--red); color: var(--cream);
-    font-weight: 600; font-size: 14px; padding: 12px 32px;
-    border-radius: 6px; text-decoration: none; margin-bottom: 12px;
-  }
-  .enroll-note { font-size: 10px; color: var(--bark); }
-
-  /* ── Disclaimer ── */
-  /* Sample letter */
-  .sl { border:1.5px solid #1E110A; border-radius:8px; overflow:hidden; margin:14px 0; break-inside:avoid; page-break-inside:avoid; }
-  .sl-hd { background:#1E110A; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
-  .sl-hd-t { font-size:12px; font-weight:600; }
-  .sl-hd-tag { font-size:10px; color:#8A7A6A; text-transform:uppercase; letter-spacing:.05em; }
-  .sl-bd { padding:14px; font-size:11.5px; line-height:1.75; color:#1E110A; background:#F7F3EE; }
-  .sl-bd p { margin-bottom:9px; }
-  .sl-ph { border-bottom:1px dashed #5C3D2E; display:inline-block; min-width:100px; color:#7A6A58; font-style:italic; }
-  .sl-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10.5px; color:#7A6A58; }
-  /* Call script */
-  .ss { border:1.5px solid #5C3D2E; border-radius:8px; overflow:hidden; margin:14px 0; break-inside:avoid; page-break-inside:avoid; }
-  .ss-hd { background:#5C3D2E; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
-  .ss-hd-t { font-size:12px; font-weight:600; }
-  .ss-hd-tag { font-size:10px; color:#C4B5A0; text-transform:uppercase; letter-spacing:.05em; }
-  .ss-bd { padding:14px; }
-  .ss-ln { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
-  .ss-spk { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7A6A58; min-width:44px; margin-top:2px; flex-shrink:0; }
-  .ss-txt { font-size:11.5px; color:#1E110A; line-height:1.6; }
-  .ss-note { font-size:10.5px; color:#7A6A58; background:#EDE5DA; border-radius:4px; padding:6px 10px; margin:3px 0 8px 52px; font-style:italic; }
-  .ss-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10.5px; color:#7A6A58; }
-  /* Tips */
-  .tips { background:#EDE5DA; border-radius:8px; padding:14px 16px; margin:12px 0; break-inside:avoid; }
-  .tips-t { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5C3D2E; margin-bottom:8px; }
-  .tip { display:flex; gap:8px; font-size:11.5px; color:#1E110A; margin-bottom:6px; align-items:flex-start; line-height:1.55; }
-  .tip-d { width:5px; height:5px; border-radius:50%; background:#8B1A1A; flex-shrink:0; margin-top:5px; }
-  /* Profile table */
-  .pt { width:100%; border-collapse:collapse; font-size:11.5px; margin:10px 0; }
-  .pt th { text-align:left; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#7A6A58; padding:6px 8px; border-bottom:1.5px solid #1E110A; background:#EDE5DA; }
-  .pt td { padding:7px 8px; border-bottom:1px solid #EDE5DA; vertical-align:top; }
-  .pt tr.you { background:#FAF3F3; }
-  .pt tr.you td { font-weight:500; }
-  .pt .code { font-family:'DM Serif Display',serif; font-size:12px; color:#5C3D2E; }
-  .pt tr.you .code { color:#8B1A1A; }
-  .pt .pname { font-weight:600; }
-  .pt tr.you .pname { color:#8B1A1A; }
-  .you-b { display:inline-block; font-size:8px; font-weight:700; background:#8B1A1A; color:#F7F3EE; padding:1px 5px; border-radius:3px; margin-left:5px; }
-  .pt-traits { font-size:10.5px; color:#7A6A58; }
-
-  .disclaimer {
-    font-size: 11px; color: var(--sand); font-style: italic;
-    margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--offwhite);
-    line-height: 1.6;
-  }
-
-  /* ── Print optimisation ── */
-  @media print {
-    body { background: var(--cream); }
-    .cover { margin: -18mm -18mm 0; }
-    h2 { break-after: avoid; }
-    .action, .rights-item, .trait, .next-item, .context-box { break-inside: avoid; }
-    .rights-section, .next-section { break-before: page; }
-    table { break-inside: auto; }
-    tr { break-inside: avoid; }
-  }
-</style>
-</head><body>
-
-<div class="page">
-
-<!-- COVER -->
-<div class="cover">
-  <div class="cover-eyebrow">DebtSnap · Personal Debt Relief Report</div>
-  <h1>Your Debt<br>Relief Report</h1>
-  <div class="cover-sub">A personalized analysis of your debt situation, your legal rights,<br>and your complete action plan — in order of priority.</div>
-  <div class="cover-meta">
-    <span>Generated: ${ctx.generatedAt}</span>
-    <span>Profile: ${ctx.info.name}</span>
-    <span>Total debt: ${fmt(ctx.total)}</span>
-  </div>
-</div>
-
-<!-- DEBT PICTURE -->
-<h2>Your Debt Picture</h2>
-<div class="metrics">
-  <div class="metric"><div class="v">${fmt(ctx.total)}</div><div class="l">Total debt</div></div>
-  <div class="metric"><div class="v">${ctx.dti !== null ? ctx.dti + '%' : '—'}</div><div class="l">Debt-to-income</div></div>
-  <div class="metric"><div class="v">${fmt(Math.abs(ctx.disposable))}</div><div class="l">${ctx.disposable >= 0 ? 'Monthly surplus' : 'Monthly shortfall'}</div></div>
-  ${annualInt > 0 ? `<div class="metric"><div class="v">${fmt(Math.round(annualInt))}</div><div class="l">Annual interest cost</div></div>` : ''}
-</div>
-
-<table>
-  <thead><tr><th>Account</th><th>Balance</th><th>Rate</th><th>Min pay</th><th>Status</th><th>Payoff (mins)</th></tr></thead>
-  <tbody>
-    ${ctx.debts.map(d => {
-      const mos = payoffMos(d.balance, d.rate, d.minPay);
-      const mosStr = mos === null ? '—' : mos > 360 ? '30+ yrs' : mos > 24 ? Math.ceil(mos/12)+' yrs' : mos+' mos';
-      return `<tr>
-        <td>${d.label}</td>
-        <td><strong>${fmt(d.balance)}</strong></td>
-        <td>${d.rateBand || (d.rate ? d.rate+'%' : '—')}</td>
-        <td>${d.minPay ? fmt(d.minPay)+'/mo' : '—'}</td>
-        <td>${statusMap[d.status]||d.status}</td>
-        <td>${mosStr}</td>
-      </tr>`;
-    }).join('')}
-    <tr><td><strong>Total</strong></td><td><strong>${fmt(ctx.total)}</strong></td><td colspan="4"></td></tr>
-  </tbody>
-</table>
-
-${ctx.dti > 36 ? `<div class="context-box">Your DTI of ${ctx.dti}% is ${ctx.dti > 50 ? 'in the critical range. At this level, debt is consuming a substantial portion of your income and limiting your options significantly.' : 'above the 36% threshold most lenders consider healthy. A structured plan now prevents this from worsening.'}</div>` : ''}
-${annualInt > 0 ? `<div class="context-box">Your accounts are costing you approximately <strong>${fmt(Math.round(annualInt/12))} per month</strong> — ${fmt(Math.round(annualInt))} per year — in pure interest charges. That is money reducing your balance by nothing. Eliminating your highest-rate account first materially changes this figure.</div>` : ''}
-
-<!-- PROFILE -->
-<h2>Your Financial Profile</h2>
-<div class="profile-device">
-  <div class="pcode">${ctx.archetype}<div class="pcode-sub">Your financial<br>profile</div></div>
-  <div class="pname">${ctx.info.name}</div>
-</div>
-<div class="pdesc">${ctx.info.desc}</div>
-${Object.entries(ctx.info.traits||{}).length > 0 ? `
-<div class="traits">
-  ${Object.entries(ctx.info.traits).map(([letter]) => {
-    const t = TRAIT_DEFS[letter];
-    if (!t) return '';
-    return `<div class="trait"><div class="trait-dim">${t.dim}</div><div class="trait-val">${t.val}</div><div class="trait-desc">${t.desc}</div></div>`;
-  }).join('')}
-</div>` : ''}
-<div class="context-box">${ctx.info.guide || 'Your plan is sequenced and toned to match how you respond best to guidance and action prompts.'}</div>
-
-<!-- ACTION PLAN -->
-<h2>Your Complete Action Plan</h2>
-${(plan.actions||[]).slice(0,5).map((a, i) => {
-  const whatNextBodies = [
-    "Gather your account numbers and the collector's mailing address. Send via USPS Certified Mail with Return Receipt. Keep the tracking number. The clock starts when they receive it.",
-    "Your servicer must process IDR applications within 30 days. You may qualify for immediate forbearance while reviewing. Your payment recalculates each year based on your tax return.",
-    "Call and say: 'I would like to apply for your financial hardship program.' Ask for the hardship or retention team. Get the agent name and any arrangement confirmed in writing before making a payment.",
-    "Pull your free credit reports from AnnualCreditReport.com first. Verify the balance, open date, and date of first delinquency. These dates determine your statute of limitations and negotiating position.",
-    "Once complete, update your debt list. Every completed step shifts your DTI and your leverage with remaining creditors. The subscription coaching layer will prompt you at the right time for the next action."
-  ];
-  return `<div class="action${a.urgent?' urgent':''}">
-    <div class="a-head">
-      <div class="a-num">${i+1}</div>
-      <div>
-        <span class="a-tag${a.urgent?' urgent':''}">${a.urgent?'Act now':priLbl[a.priority]||'Next step'}</span>
-        <div class="a-title">${a.title}</div>
-      </div>
-    </div>
-    <div class="a-body">${a.body}</div>
-    ${a.impact?`<div class="a-impact">${a.impact}</div>`:''}
-    <div class="a-next">
-      <div class="a-next-lbl">${i===0?'Before you start':i===1?'What to expect':i===2?'What to say':i===3?'What to prepare':'After this step'}</div>
-      <div class="a-next-body">${whatNextBodies[i]}</div>
-    </div>
-  </div>`;
-}).join('')}
-
-<!-- LEGAL RIGHTS -->
-<div class="rights-section"><h2>Your Legal Rights</h2>
-${ctx.inCollections ? `
-<div class="rights-item urgent">
-  <div class="rights-law">FDCPA §809(b) — Applies to your accounts</div>
-  <div class="rights-title">Right to demand debt validation</div>
-  <div class="rights-body">Any debt collector must provide written verification of a debt upon written request within 30 days of first contact. Until they verify, all collection activity — calls, letters, credit reporting — must stop completely. Failure to comply is a federal violation.</div>
-  <div class="rights-action">Send a certified Debt Validation Letter within 30 days. Template available with ongoing support subscription.</div>
-</div>
-<div class="rights-item urgent">
-  <div class="rights-law">FDCPA §805(c) — Applies to your accounts</div>
-  <div class="rights-title">Right to demand all contact cease</div>
-  <div class="rights-body">A written cease-and-desist letter to a collector limits them to one final contact — to confirm cessation or notify of a specific legal action. Further contact is a federal violation worth up to $1,000 in statutory damages per incident plus attorney fees.</div>
-  <div class="rights-action">Send via certified mail. Log every contact afterward with date, time, and content.</div>
-</div>` : ''}
-<div class="rights-item">
-  <div class="rights-law">FCRA §611</div>
-  <div class="rights-title">Right to dispute and correct your credit report</div>
-  <div class="rights-body">Free reports are available weekly at AnnualCreditReport.com. Any disputed item must be investigated within 30 days. Items that cannot be verified must be removed. Studies show 30–40% of reports contain errors.</div>
-  <div class="rights-action">Pull all three reports now. Dispute directly with each bureau in writing — no third party needed.</div>
-</div>
-${ctx.hasFedStudent ? `
-<div class="rights-item">
-  <div class="rights-law">Higher Education Act §493C</div>
-  <div class="rights-title">Right to income-driven repayment</div>
-  <div class="rights-body">Every federal borrower has the statutory right to enroll in an income-driven plan regardless of credit history or employment status. Payments can be as low as $0/month. Remaining balances are forgiven after 20–25 years of qualifying payments.</div>
-  <div class="rights-action">Apply at studentaid.gov. Takes 10 minutes.</div>
-</div>` : ''}
-${ctx.debts.some(d=>d.type==='medical') ? `
-<div class="rights-item">
-  <div class="rights-law">ACA §501(r)</div>
-  <div class="rights-title">Right to charity care on medical debt</div>
-  <div class="rights-body">All 501(c)(3) nonprofit hospitals must have financial assistance programs. They cannot take extraordinary collection actions — including credit reporting or lawsuits — without first screening you for eligibility.</div>
-  <div class="rights-action">Call billing and ask for a "financial assistance application" by name. This is a legal requirement.</div>
-</div>` : ''}
-
-</div>
-<!-- WHAT COMES NEXT -->
-<div class="next-section"><h2>What Comes Next</h2>
-<p style="font-style:italic">Your report covers the foundational steps. Execution is what changes the numbers — and that is what the ongoing support subscription covers.</p>
-<div class="next-grid">
-  <div class="next-item"><div class="next-title">Negotiation scripts</div><div class="next-body">Word-for-word call scripts for hardship programs, settlement offers, and creditor disputes — matched to your profile type and account category.</div></div>
-  <div class="next-item"><div class="next-title">Timed check-ins</div><div class="next-body">Prompts and nudges calibrated to your ${ctx.info.name} profile, sent at the moments most likely to keep you moving forward.</div></div>
-  <div class="next-item"><div class="next-title">Personal coaching</div><div class="next-body">Contextual guidance for your specific situation — not generic advice. Ask questions, work through sticking points, handle responses from creditors.</div></div>
-  <div class="next-item"><div class="next-title">Progress tracking</div><div class="next-body">A running view of your debt picture as it changes — balances, DTI, completed steps. Seeing the numbers move is one of the most powerful motivators.</div></div>
-</div>
-
-<div class="enroll-box">
-  <div class="enroll-price">$69<span>/month</span></div>
-  <div class="enroll-desc">When you're ready to go further. Cancel anytime &middot; No contracts &middot; No percentage of your debt.</divv>
-  <div class="enroll-compare">Traditional debt agencies charge 15–25% of your total balance. On ${fmt(ctx.total)}, that is ${fmt(Math.round(ctx.total*0.2))} or more.</div>
-  <a href="https://debtsnap.com" class="enroll-cta">Learn more about ongoing support →</a>
-  <div class="enroll-items">Negotiation scripts · Coaching · Check-ins · Progress tracking</div>
-</div>
-
-</div><div class="disclaimer">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm and does not provide legal representation. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations, meaning no upfront cost to you. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>
-
-</div><!-- end .page -->
-</body></html>`;
-
-  const safeFilename = `DebtSnap-Report-${ctx.generatedAt.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+  // Show loading state
+  const btn = document.querySelector('.report-actions-bar .btn-primary');
+  const origText = btn ? btn.textContent : '';
+  if (btn) { btn.textContent = 'Generating PDF…'; btn.disabled = true; }
 
   try {
-    // Try the Vercel serverless PDF endpoint first
-    const resp = await fetch('/api/pdf', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ html: htmlContent, filename: safeFilename }),
-    });
+    // Load jsPDF and html2canvas from CDN
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js');
+    await loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js');
 
-    if (resp.ok) {
-      const blob = await resp.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = safeFilename;
-      a.click();
-      URL.revokeObjectURL(url);
-      return;
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+    const pageW = 210; const pageH = 297;
+    const margin = 16; const contentW = pageW - margin * 2;
+
+    // Helper: add a rendered section to the PDF
+    async function addSection(el, isFirst) {
+      const canvas = await html2canvas(el, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: '#F7F3EE',
+        logging: false,
+        windowWidth: 794,
+      });
+      const imgData = canvas.toDataURL('image/jpeg', 0.92);
+      const imgW    = contentW;
+      const imgH    = (canvas.height / canvas.width) * imgW;
+      const maxH    = pageH - margin * 2;
+
+      if (!isFirst) pdf.addPage();
+
+      // If content fits on one page, center it
+      if (imgH <= maxH) {
+        pdf.addImage(imgData, 'JPEG', margin, margin, imgW, imgH);
+      } else {
+        // Slice into pages
+        let yOffset = 0;
+        while (yOffset < imgH) {
+          const sliceH  = Math.min(maxH, imgH - yOffset);
+          const slicePct = sliceH / imgH;
+          const srcY    = (yOffset / imgH) * canvas.height;
+          const srcH    = slicePct * canvas.height;
+          // Create a slice canvas
+          const slice = document.createElement('canvas');
+          slice.width  = canvas.width;
+          slice.height = srcH;
+          const sctx = slice.getContext('2d');
+          sctx.drawImage(canvas, 0, srcY, canvas.width, srcH, 0, 0, canvas.width, srcH);
+          const sliceData = slice.toDataURL('image/jpeg', 0.92);
+          pdf.addImage(sliceData, 'JPEG', margin, margin, imgW, sliceH);
+          yOffset += maxH;
+          if (yOffset < imgH) { pdf.addPage(); }
+        }
+      }
     }
-  } catch (e) {
-    // Serverless not available — fall back to print dialog
-  }
 
-  // Fallback: write to hidden iframe and trigger print-to-PDF
-  const blob    = new Blob([htmlContent], { type: 'text/html' });
-  const blobUrl = URL.createObjectURL(blob);
+    // Build a hidden off-screen render container
+    const container = document.createElement('div');
+    container.style.cssText = `
+      position:fixed; top:-9999px; left:-9999px;
+      width:794px; background:#F7F3EE;
+      font-family:'DM Sans',Georgia,sans-serif;
+      color:#1E110A; font-size:13px; line-height:1.65;
+    `;
+    document.body.appendChild(container);
 
-  // Try iframe approach first (avoids popup blocker)
-  let frame = document.getElementById('pdf-print-frame');
-  if (!frame) {
-    frame = document.createElement('iframe');
-    frame.id = 'pdf-print-frame';
-    frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:794px;height:1123px;border:none;visibility:hidden';
-    document.body.appendChild(frame);
-  }
-  frame.src = blobUrl;
-  frame.onload = () => {
-    try {
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
-    } catch(e) {
-      // Final fallback: download as .html
-      const a    = document.createElement('a');
-      a.href     = blobUrl;
-      a.download = safeFilename.replace('.pdf', '.html');
-      a.click();
+    // Shared styles injected into the container
+    const style = document.createElement('style');
+    style.textContent = `
+      @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500;600&display=swap');
+      * { box-sizing:border-box; margin:0; padding:0; }
+      body, div { font-family:'DM Sans',Georgia,sans-serif; }
+      .pdf-cover { background:#1E110A; color:#F7F3EE; padding:56px 48px; min-height:220mm; display:flex; flex-direction:column; justify-content:space-between; }
+      .pdf-eyebrow { font-size:10px; font-weight:600; letter-spacing:.12em; text-transform:uppercase; color:#8A7A6A; margin-bottom:20px; }
+      .pdf-title { font-family:'DM Serif Display',serif; font-size:52px; line-height:1.05; letter-spacing:-0.02em; color:#F7F3EE; margin-bottom:16px; }
+      .pdf-sub { font-size:14px; color:#8A7A6A; line-height:1.6; max-width:480px; margin-bottom:40px; }
+      .pdf-divider { width:40px; height:3px; background:#8B1A1A; margin-bottom:24px; border-radius:2px; }
+      .pdf-meta { font-size:12px; color:#4A3728; border-top:1px solid #2D2520; padding-top:16px; display:flex; flex-wrap:wrap; gap:24px; }
+      .pdf-section { padding:32px 40px; background:#F7F3EE; }
+      .pdf-section + .pdf-section { border-top: 1px solid #EDE5DA; }
+      h2 { font-family:'DM Serif Display',serif; font-size:20px; letter-spacing:-0.01em; color:#1E110A; margin:0 0 10px; padding-bottom:8px; border-bottom:1.5px solid #1E110A; }
+      h3 { font-size:14px; font-weight:600; margin:14px 0 5px; color:#1E110A; }
+      p { font-size:13px; color:#7A6A58; line-height:1.65; margin-bottom:10px; }
+      .metrics { display:flex; gap:10px; margin:14px 0; }
+      .metric { flex:1; background:#EDE5DA; border-radius:8px; padding:13px; text-align:center; }
+      .metric .v { font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:2px; color:#1E110A; }
+      .metric .l { font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#7A6A58; }
+      .metric .n { font-size:10px; color:#7A6A58; margin-top:2px; }
+      table { width:100%; border-collapse:collapse; font-size:12px; margin:12px 0; }
+      th { text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#7A6A58; padding:6px 0; border-bottom:1.5px solid #1E110A; }
+      td { padding:8px 0; border-bottom:1px solid #EDE5DA; vertical-align:top; color:#1E110A; }
+      .context-box { background:#EDE5DA; border-left:2px solid #5C3D2E; padding:10px 13px; border-radius:0 6px 6px 0; margin:10px 0; font-size:12px; color:#5C3D2E; line-height:1.65; }
+      .context-box strong { color:#1E110A; }
+      .profile-device { display:flex; align-items:center; gap:14px; border:1.5px solid #1E110A; border-radius:10px; padding:14px 18px; margin:12px 0; }
+      .pcode { font-family:'DM Serif Display',serif; font-size:13px; color:#F7F3EE; background:#1E110A; padding:8px 11px; border-radius:6px; text-align:center; line-height:1.25; flex-shrink:0; }
+      .pcode-sub { font-size:8px; font-weight:600; letter-spacing:.07em; text-transform:uppercase; color:#8A7A6A; margin-top:3px; display:block; }
+      .pname { font-size:14px; font-weight:600; color:#1E110A; margin-bottom:3px; }
+      .pdesc { font-size:12px; color:#7A6A58; line-height:1.6; }
+      .traits { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0; }
+      .trait { background:#EDE5DA; border-radius:6px; padding:10px; }
+      .trait-dim { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7A6A58; }
+      .trait-val { font-size:12px; font-weight:600; color:#5C3D2E; margin:2px 0; }
+      .trait-desc { font-size:11px; color:#7A6A58; line-height:1.5; }
+      .guide-box { background:#EDE5DA; border-left:2px solid #5C3D2E; border-radius:0 6px 6px 0; padding:10px 13px; font-size:12px; color:#5C3D2E; line-height:1.6; margin-top:10px; }
+      .action { border:1.5px solid #1E110A; border-radius:10px; padding:14px; margin-bottom:12px; background:#F7F3EE; }
+      .action.urgent { border-color:#8B1A1A; }
+      .a-head { display:flex; gap:10px; align-items:flex-start; margin-bottom:8px; }
+      .a-num { width:44px; height:44px; border-radius:50%; background:#EDE5DA; border:2px solid #5C3D2E; display:flex; align-items:center; justify-content:center; font-family:'DM Serif Display',serif; font-size:20px; color:#5C3D2E; flex-shrink:0; }
+      .action.urgent .a-num { background:#8B1A1A; border-color:#8B1A1A; color:#F7F3EE; }
+      .a-tag { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:2px 7px; border-radius:3px; background:#1E110A; color:#F7F3EE; display:inline-block; margin-bottom:3px; }
+      .a-tag.urgent { background:#8B1A1A; }
+      .a-title { font-size:13px; font-weight:600; line-height:1.4; color:#1E110A; }
+      .a-body { font-size:12px; color:#7A6A58; line-height:1.65; margin:6px 0; padding-left:54px; }
+      .a-impact { display:inline-block; margin:4px 0 0 54px; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; border:1px solid #5C3D2E; color:#5C3D2E; }
+      .a-next { margin-top:10px; padding:10px 12px 10px 54px; border-top:1px dashed #EDE5DA; }
+      .a-next-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5C3D2E; margin-bottom:4px; }
+      .a-next-body { font-size:11px; color:#7A6A58; line-height:1.65; }
+      .rights-hd { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:#5C3D2E; margin-bottom:4px; }
+      .rights-badge { display:inline-block; font-size:9px; font-weight:700; background:#8B1A1A; color:#F7F3EE; padding:1px 6px; border-radius:3px; margin-left:6px; }
+      .rights-title { font-size:13px; font-weight:600; margin:4px 0; color:#1E110A; }
+      .rights-body { font-size:12px; color:#7A6A58; line-height:1.65; margin-bottom:6px; }
+      .rights-action { font-size:11px; font-weight:600; color:#2A6040; }
+      .rights-item { padding:12px 0; border-bottom:1px solid #EDE5DA; }
+      .rights-item:last-child { border-bottom:none; }
+      .rights-item.urgent { background:#FAF3F3; padding:12px; border-radius:6px; margin-bottom:8px; border:1px solid #F0DADA; }
+      .sl { border:1.5px solid #1E110A; border-radius:8px; overflow:hidden; margin:12px 0; }
+      .sl-hd { background:#1E110A; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
+      .sl-hd-t { font-size:12px; font-weight:600; }
+      .sl-hd-tag { font-size:10px; color:#8A7A6A; text-transform:uppercase; letter-spacing:.05em; }
+      .sl-bd { padding:14px; font-size:12px; line-height:1.75; color:#1E110A; background:#F7F3EE; }
+      .sl-bd p { margin-bottom:9px; }
+      .sl-ph { border-bottom:1px dashed #5C3D2E; display:inline-block; min-width:80px; color:#7A6A58; font-style:italic; }
+      .sl-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10px; color:#7A6A58; }
+      .ss { border:1.5px solid #5C3D2E; border-radius:8px; overflow:hidden; margin:12px 0; }
+      .ss-hd { background:#5C3D2E; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
+      .ss-hd-t { font-size:12px; font-weight:600; }
+      .ss-hd-tag { font-size:10px; color:#C4B5A0; text-transform:uppercase; letter-spacing:.05em; }
+      .ss-bd { padding:14px; background:#F7F3EE; }
+      .ss-ln { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
+      .ss-spk { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7A6A58; min-width:40px; margin-top:2px; flex-shrink:0; }
+      .ss-txt { font-size:12px; color:#1E110A; line-height:1.6; }
+      .ss-note { font-size:10px; color:#7A6A58; background:#EDE5DA; border-radius:4px; padding:5px 9px; margin:2px 0 7px 48px; font-style:italic; }
+      .ss-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10px; color:#7A6A58; }
+      .tips { background:#EDE5DA; border-radius:8px; padding:14px 16px; margin:12px 0; }
+      .tips-t { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5C3D2E; margin-bottom:8px; }
+      .tip { display:flex; gap:8px; font-size:12px; color:#1E110A; margin-bottom:6px; align-items:flex-start; line-height:1.55; }
+      .tip:last-child { margin-bottom:0; }
+      .tip-d { width:5px; height:5px; border-radius:50%; background:#8B1A1A; flex-shrink:0; margin-top:5px; }
+      .pt { width:100%; border-collapse:collapse; font-size:12px; margin:10px 0; }
+      .pt th { text-align:left; font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#7A6A58; padding:6px 8px; border-bottom:1.5px solid #1E110A; background:#EDE5DA; }
+      .pt td { padding:7px 8px; border-bottom:1px solid #EDE5DA; vertical-align:top; }
+      .pt tr.you { background:#FAF3F3; }
+      .pt tr.you td { font-weight:500; }
+      .pt .code { font-family:'DM Serif Display',serif; font-size:12px; color:#5C3D2E; }
+      .pt tr.you .code { color:#8B1A1A; }
+      .pt .pn { font-weight:600; }
+      .pt tr.you .pn { color:#8B1A1A; }
+      .you-b { display:inline-block; font-size:8px; font-weight:700; background:#8B1A1A; color:#F7F3EE; padding:1px 5px; border-radius:3px; margin-left:4px; }
+      .pt-tr { font-size:10.5px; color:#7A6A58; }
+      .enroll-box { background:#1E110A; border-radius:10px; padding:24px; text-align:center; color:#F7F3EE; margin:16px 0; }
+      .enroll-eyebrow { font-size:10px; font-weight:600; letter-spacing:.1em; text-transform:uppercase; color:#8A7A6A; margin-bottom:8px; }
+      .enroll-price { font-family:'DM Serif Display',serif; font-size:36px; margin-bottom:4px; }
+      .enroll-price span { font-family:'DM Sans',sans-serif; font-size:16px; color:#8A7A6A; font-weight:400; }
+      .enroll-desc { font-size:12px; color:#8A7A6A; margin-bottom:8px; line-height:1.6; }
+      .enroll-compare { font-size:12px; color:#4A3728; margin-bottom:14px; }
+      .enroll-compare strong { color:#F7F3EE; }
+      .enroll-cta-t { font-size:13px; font-weight:600; color:#F0DADA; margin-bottom:8px; }
+      .enroll-note { font-size:10px; color:#4A3728; }
+      .disc { font-size:11px; color:#8A7A6A; font-style:italic; margin-top:24px; padding-top:14px; border-top:1px solid #EDE5DA; line-height:1.6; }
+      .fn { font-size:10px; color:#8A7A6A; margin-top:4px; }
+    `;
+    container.appendChild(style);
+
+    // ── Build report sections as DOM nodes ──────────────────────────
+
+    const DEFAULT_RATES_R = { 'credit-card':20,'student-federal':6,'student-private':9,'medical':0,'personal':14,'other':18 };
+    function poMonths(bal, rate, monthly, dtype) {
+      if (!monthly) return null;
+      const r = (rate || DEFAULT_RATES_R[dtype] || 18) / 100 / 12;
+      if (r <= 0) return Math.ceil(bal/monthly);
+      if (monthly <= bal*r) return null;
+      return Math.ceil(-Math.log(1-(bal*r/monthly))/Math.log(1+r));
     }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
-  };
+    function poStr(mos) {
+      if (mos === null) return '—';
+      if (mos > 360) return '30+ yrs';
+      if (mos > 24) return Math.ceil(mos/12)+' yrs';
+      return mos+' mos';
+    }
+
+    const annualInt = ctx.debts.filter(d=>d.rate).reduce((s,d)=>s+d.balance*(d.rate/100),0);
+    const statusLbl = {current:'Current','30':'30d late','60':'60d late','90':'90d+ late',collections:'Collections','charged-off':'Charged off','no-contact':'No contact'};
+    const priLbl = {high:'High priority',medium:'Next step',low:'Also consider'};
+    const whatNextHeadings = ['Before you start','What to expect','What to say','What to prepare','After this step'];
+    const whatNextBodies = [
+      "Gather account numbers and the collector's mailing address. Send via USPS Certified Mail with Return Receipt. The clock starts when they receive it.",
+      "Your servicer must process IDR applications within 30 days. You may qualify for immediate forbearance while reviewing.",
+      "Say: 'I'd like to apply for your hardship program.' Ask for the hardship or retention team. Get the agent name and any arrangement in writing before paying.",
+      "Pull your free credit reports from AnnualCreditReport.com first. Verify balances, open dates, and first delinquency dates.",
+      "Once complete, update your debt list. Every completed step shifts your DTI and your leverage with remaining creditors."
+    ];
+
+    const ALL_PROFILES_R = [
+      ['WAOR','The Focused Planner','Engaged · Capable · Organized · Analytical'],
+      ['WAOE','The Ready Worrier','Engaged · Capable · Organized · Feeling-led'],
+      ['WACR','The Analytical Juggler','Engaged · Capable · Scattered · Analytical'],
+      ['WACE','The Well-Intentioned Juggler','Engaged · Capable · Scattered · Feeling-led'],
+      ['WIOR','The Organized Rebuilder','Engaged · Constrained · Organized · Analytical'],
+      ['WIOE','The Anxious Organizer','Engaged · Constrained · Organized · Feeling-led'],
+      ['WICR','The Determined Rebuilder','Engaged · Constrained · Scattered · Analytical'],
+      ['WICE','The Overwhelmed Doer','Engaged · Constrained · Scattered · Feeling-led'],
+      ['DICR','The Cautious Realist','Guarded · Constrained · Scattered · Analytical'],
+      ['DICE','The Exhausted Avoider','Guarded · Constrained · Scattered · Feeling-led'],
+    ];
+
+    function sec(titleStr, subStr, bodyHtml) {
+      return `<div class="pdf-section"><h2>${titleStr}</h2>${subStr ? `<p style="color:#7A6A58;font-style:italic;margin-bottom:12px">${subStr}</p>` : ''}${bodyHtml}</div>`;
+    }
+
+    // Cover
+    container.innerHTML += `<div class="pdf-cover">
+      <div>
+        <div class="pdf-eyebrow">DebtSnap · Personal Debt Relief Report</div>
+        <div class="pdf-divider"></div>
+        <div class="pdf-title">Your Debt<br>Relief Report</div>
+        <div class="pdf-sub">A personalized analysis of your debt situation, your legal rights, and your complete action plan — in order of priority.</div>
+      </div>
+      <div class="pdf-meta">
+        <span>Generated: ${ctx.generatedAt}</span>
+        <span>Profile: ${info.name}</span>
+        <span>Total: ${fmt(ctx.total)}</span>
+      </div>
+    </div>`;
+
+    // Section 1: Debt picture
+    container.innerHTML += sec('Your Debt Picture', null,
+      `<div class="metrics">
+        <div class="metric"><div class="v">${fmt(ctx.total)}</div><div class="l">Total debt</div></div>
+        <div class="metric"><div class="v">${ctx.dti !== null ? ctx.dti+'%' : '—'}</div><div class="l">Debt-to-income</div><div class="n">Advisable: under 36%</div></div>
+        <div class="metric"><div class="v">${fmt(Math.abs(ctx.disposable))}</div><div class="l">${ctx.disposable>=0?'Surplus':'Shortfall'}/mo</div></div>
+        ${annualInt>0?`<div class="metric"><div class="v">${fmt(Math.round(annualInt))}</div><div class="l">Annual interest</div></div>`:''}
+      </div>
+      <table>
+        <thead><tr><th>Account</th><th>Balance</th><th>Rate</th><th>Min pay</th><th>Status</th><th>Payoff*</th></tr></thead>
+        <tbody>
+          ${ctx.debts.map(d=>{
+            const mos = poMonths(d.balance,d.rate,d.minPay,d.type);
+            return `<tr>
+              <td>${d.label}</td>
+              <td><strong>${fmt(d.balance)}</strong></td>
+              <td>${d.rateBand||d.rate?d.rateBand||d.rate+'%':'est. '+(DEFAULT_RATES_R[d.type]||18)+'%'}</td>
+              <td>${d.minPay?fmt(d.minPay)+'/mo':'—'}</td>
+              <td>${statusLbl[d.status]||d.status}</td>
+              <td>${poStr(mos)}</td>
+            </tr>`;
+          }).join('')}
+          <tr><td><strong>Total</strong></td><td><strong>${fmt(ctx.total)}</strong></td><td colspan="4"></td></tr>
+        </tbody>
+      </table>
+      <div class="fn">* Payoff at minimum payment only. Where rate not specified, a typical rate for that debt type is used as an estimate.</div>
+      ${ctx.dti>36?`<div class="context-box">Your DTI of ${ctx.dti}% is ${ctx.dti>50?'in the critical range — debt is consuming a substantial portion of your income.':'above the 36% threshold most lenders consider healthy.'}</div>`:''}
+      ${annualInt>0?`<div class="context-box">Your accounts cost approximately <strong>${fmt(Math.round(annualInt/12))}/month</strong> — ${fmt(Math.round(annualInt))}/year — in pure interest. Eliminating your highest-rate account first changes this significantly.</div>`:''}`
+    );
+
+    // Section 2: Profile
+    const traitCards = Object.entries(info.traits||{}).map(([l])=>{
+      const t = TRAIT_DEFS[l]; if(!t) return '';
+      return `<div class="trait"><div class="trait-dim">${t.dim}</div><div class="trait-val">${t.val}</div><div class="trait-desc">${t.desc}</div></div>`;
+    }).join('');
+    container.innerHTML += sec('Your Financial Profile', null,
+      `<div class="profile-device">
+        <div class="pcode">${ctx.archetype}<span class="pcode-sub">Your financial<br>profile</span></div>
+        <div><div class="pname">${info.name}</div><div class="pdesc">${info.desc}</div></div>
+      </div>
+      ${traitCards?`<div class="traits">${traitCards}</div>`:''}
+      <div class="guide-box">${info.guide||'Your plan is sequenced and toned to match how you respond best.'}</div>`
+    );
+
+    // Section 3: Action plan
+    container.innerHTML += sec('Your Complete Action Plan', 'All 5 priority steps — with what to say, what to expect, and what to do.',
+      (plan.actions||[]).slice(0,5).map((a,i)=>`
+        <div class="action${a.urgent?' urgent':''}">
+          <div class="a-head">
+            <div class="a-num">${i+1}</div>
+            <div>
+              <span class="a-tag${a.urgent?' urgent':''}">${a.urgent?'Act now':priLbl[a.priority]||'Next step'}</span>
+              <div class="a-title">${a.title}</div>
+            </div>
+          </div>
+          <div class="a-body">${a.body}</div>
+          ${a.impact?`<div class="a-impact">${a.impact}</div>`:''}
+          <div class="a-next">
+            <div class="a-next-lbl">${whatNextHeadings[i]||'Next'}</div>
+            <div class="a-next-body">${whatNextBodies[i]||whatNextBodies[4]}</div>
+          </div>
+        </div>`).join('')
+    );
+
+    // Section 4: Legal rights
+    const rightsItems = [];
+    if (ctx.inCollections) {
+      rightsItems.push({law:'FDCPA §809(b)',title:'Right to demand debt validation',body:'Any collector must provide written verification upon request within 30 days. All collection activity must stop until they comply.',action:'Send a certified Debt Validation Letter. See sample below.',urgent:true});
+      rightsItems.push({law:'FDCPA §805(c)',title:'Right to stop all contact',body:'A written cease-and-desist limits collectors to one final contact. Further contact is a federal violation worth up to $1,000 per incident.',action:'Send certified mail. Log every subsequent contact.',urgent:true});
+    }
+    rightsItems.push({law:'FCRA §611',title:'Right to dispute credit report errors',body:'Free reports weekly at AnnualCreditReport.com. Disputed items must be investigated within 30 days. Unverifiable items must be removed.',action:'Pull all three reports. Dispute directly with each bureau — no third party needed.'});
+    if (ctx.hasFedStudent) rightsItems.push({law:'Higher Education Act §493C',title:'Right to income-driven repayment',body:'Every federal borrower has the right to an IDR plan regardless of credit history. Payments can be as low as $0/month.',action:'Apply at studentaid.gov. Takes 10 minutes.'});
+    if (ctx.debts.some(d=>d.type==='medical')) rightsItems.push({law:'ACA §501(r)',title:'Right to charity care on medical debt',body:'All 501(c)(3) hospitals must offer financial assistance and cannot take collection action without screening you first.',action:"Ask the billing department for a 'financial assistance application' by name."});
+
+    container.innerHTML += sec('Your Legal Rights', null,
+      rightsItems.map(r=>`<div class="rights-item${r.urgent?' urgent':''}">
+        <div class="rights-hd">${r.law}${r.urgent?'<span class="rights-badge">Applies to your accounts</span>':''}</div>
+        <div class="rights-title">${r.title}</div>
+        <div class="rights-body">${r.body}</div>
+        <div class="rights-action">${r.action}</div>
+      </div>`).join('')
+    );
+
+    // Section 5: Sample letter
+    const hasCol = ctx.inCollections;
+    container.innerHTML += sec(hasCol?'Sample Letter — Debt Validation':'Sample Letter — Hardship Request',
+      'Fill in the highlighted fields. Send by USPS Certified Mail with Return Receipt.',
+      `<div class="sl">
+        <div class="sl-hd"><span class="sl-hd-t">${hasCol?'Debt Validation Letter (FDCPA §809(b))':'Hardship Request Letter'}</span><span class="sl-hd-tag">${hasCol?'FDCPA §809(b)':'Consumer rights'}</span></div>
+        <div class="sl-bd">
+          ${hasCol?`
+          <p>[Your Full Name] &nbsp;|&nbsp; [Your Address] &nbsp;|&nbsp; [Date]</p>
+          <p>[Collector Company Name] &nbsp;|&nbsp; [Collector Address]</p>
+          <p>Re: Account # <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;|&nbsp; Original Creditor: <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+          <p>To Whom It May Concern,</p>
+          <p>I am exercising my rights under the Fair Debt Collection Practices Act, 15 U.S.C. §1692g, to request written validation of the above-referenced debt. Please provide: (1) the name and address of the original creditor; (2) a complete account statement showing the amount owed; (3) proof that your firm is licensed to collect debt in my state; (4) proof of your authority to collect this particular debt.</p>
+          <p>Until you have provided this verification in writing, please <strong>cease all collection activity</strong> — including phone calls, letters, and credit bureau reporting — as required by 15 U.S.C. §1692g(b). This is a formal validation request, not a refusal to pay.</p>
+          <p>Sincerely, <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+          <p><em>Send via USPS Certified Mail with Return Receipt. Keep the green card when it returns.</em></p>` :
+          `<p>[Your Full Name] &nbsp;|&nbsp; [Your Address] &nbsp;|&nbsp; [Date]</p>
+          <p>[Creditor Name] — Financial Hardship Department &nbsp;|&nbsp; Re: Account # <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+          <p>Dear Hardship Review Team,</p>
+          <p>I am writing to request a financial hardship arrangement on the above account. Due to <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>, my monthly take-home income is currently ${fmt(ctx.income)} and essential expenses are ${fmt(ctx.expenses)}, leaving very limited funds available for debt service.</p>
+          <p>I request consideration for: a temporary reduction in minimum payment, an interest rate reduction, waiver of recent late fees, or a short-term deferral. I am committed to a full repayment plan as my situation stabilizes. Please contact me to discuss available options.</p>
+          <p>Sincerely, <span class="sl-ph">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>`}
+        </div>
+        <div class="sl-ft">Subscription includes pre-filled versions matched to each of your specific accounts.</div>
+      </div>`
+    );
+
+    // Section 6: Call script
+    container.innerHTML += sec(ctx.hasPublicNP?'Call Script — PSLF Certification':'Call Script — Hardship Program',
+      'Word-for-word guidance for your first creditor call.',
+      `<div class="ss">
+        <div class="ss-hd"><span class="ss-hd-t">${ctx.hasPublicNP?'PSLF Employer Certification Call':'Credit Card / Loan Hardship Call'}</span><span class="ss-hd-tag">Word-for-word</span></div>
+        <div class="ss-bd">
+          ${ctx.hasPublicNP?`
+          <div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"Hello — I'm calling about my student loans and the PSLF program. My name is [name] and my account number is [number]."</span></div>
+          <div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"I work for [employer name], which is a [government/501(c)(3) nonprofit]. I want to confirm my loans are eligible for PSLF, that my repayment plan qualifies, and how many qualifying payments I have on record."</span></div>
+          <div class="ss-note">Ask them to confirm your loan type and repayment plan qualify. Standard 10-year plans do not count toward PSLF — only IDR plans do.</div>
+          <div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"Can you also switch me to an IDR plan if I'm not on one? And can you confirm the date of my last qualifying payment?"</span></div>
+          <div class="ss-note">If your employer is not yet certified, ask them to walk you through submitting the PSLF Form at studentaid.gov/pslf.</div>` :
+          `<div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"Hello, I'm calling about account number [number]. I'm experiencing a financial hardship and I'd like to discuss a hardship arrangement — can you transfer me to your hardship or retention team?"</span></div>
+          <div class="ss-note">Do not say 'I can't pay.' Always frame it as seeking a solution. If told no program exists, ask for a supervisor.</div>
+          <div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"My income is [amount]/month and after essential expenses I have very limited funds available. I want to stay current — I'm hoping for a temporary interest rate reduction or a lower minimum payment for a defined period."</span></div>
+          <div class="ss-note">Have your numbers ready and be specific. Write down the agent name and employee ID number.</div>
+          <div class="ss-ln"><span class="ss-spk">Them</span><span class="ss-txt">[They offer an arrangement]</span></div>
+          <div class="ss-ln"><span class="ss-spk">You</span><span class="ss-txt">"Thank you — can you send the terms of that arrangement in writing before I make any payment? I want to confirm the details are correct."</span></div>
+          <div class="ss-note">Never pay based on a verbal promise. Always get written confirmation first.</div>`}
+        </div>
+        <div class="ss-ft">Subscription includes scripts for all creditor types, matched to your ${info.name} profile.</div>
+      </div>`
+    );
+
+    // Section 7: Pro tips
+    const tips = [
+      "Never make a payment on a collections debt before receiving written validation — a payment can reset the statute of limitations, extending how long they can sue you.",
+      "Document every creditor contact: date, time, agent name, and employee ID. Violations of your FDCPA rights are worth up to $1,000 each in statutory damages.",
+      "Charged-off debt is commonly sold to collectors for 1–7 cents on the dollar. They have enormous room to settle — knowing this changes your negotiating posture significantly.",
+      "Medical debt under $500 was removed from all three major credit reports in 2023. If you have older medical debt below this threshold, check whether it's still appearing.",
+    ];
+    if (ctx.hasFedStudent) tips.push("Student loan interest capitalizes when you exit forbearance — added to your principal balance. Enrol in IDR before forbearance ends to avoid paying interest on a larger amount.");
+
+    container.innerHTML += sec('Pro Tips',
+      'Things most people in debt don\'t know — that can materially change your position.',
+      `<div class="tips">
+        <div class="tips-t">Things most people in debt don't know</div>
+        ${tips.map(t=>`<div class="tip"><div class="tip-d"></div><div>${t}</div></div>`).join('')}
+      </div>`
+    );
+
+    // Section 8: All profiles
+    container.innerHTML += sec('All Financial Profiles',
+      'The 10 behavioral profiles used in DebtSnap\'s framework — yours is highlighted.',
+      `<table class="pt">
+        <thead><tr><th>Code</th><th>Profile name</th><th>Key traits</th></tr></thead>
+        <tbody>
+          ${ALL_PROFILES_R.map(([c,n,t])=>`<tr class="${c===ctx.archetype?'you':''}">
+            <td class="code">${c}</td>
+            <td class="pn">${n}${c===ctx.archetype?'<span class="you-b">You</span>':''}</td>
+            <td class="pt-tr">${t}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`
+    );
+
+    // Section 9: What comes next
+    container.innerHTML += sec('What Comes Next',
+      'Your report covers the foundations. Execution is what changes the numbers.',
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0">
+        <div style="background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px"><strong style="font-size:12px">Negotiation scripts</strong><p style="font-size:11px;margin-top:4px">Word-for-word calls matched to your profile and each creditor type.</p></div>
+        <div style="background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px"><strong style="font-size:12px">Timed check-ins</strong><p style="font-size:11px;margin-top:4px">Prompts calibrated to your ${info.name} profile at the moments most likely to keep you moving.</p></div>
+        <div style="background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px"><strong style="font-size:12px">Personal coaching</strong><p style="font-size:11px;margin-top:4px">Contextual guidance for your specific situation — not generic advice.</p></div>
+        <div style="background:#F7F3EE;border:1.5px solid #1E110A;border-radius:8px;padding:12px"><strong style="font-size:12px">Progress tracking</strong><p style="font-size:11px;margin-top:4px">A running view of your numbers as they improve — balances, DTI, completed steps.</p></div>
+      </div>
+      <div class="enroll-box">
+        <div class="enroll-eyebrow">Optional — ongoing support</div>
+        <div class="enroll-price">$69<span>/month</span></div>
+        <div class="enroll-desc">When you're ready to go further. Cancel anytime · No contracts.</div>
+        <div class="enroll-compare">Traditional agencies charge 15–25% of your balance. On ${fmt(ctx.total)}, that is <strong>${fmt(Math.round(ctx.total*0.2))} or more</strong>.</div>
+        <div class="enroll-cta-t">debtsnap.com — Learn more about ongoing support</div>
+        <div class="enroll-note">Scripts · Coaching · Check-ins · Progress tracking</div>
+      </div>
+      <div class="disc">This report is for educational and informational purposes only and does not constitute legal or financial advice. DebtSnap is not a law firm. For complex legal situations, consult a licensed consumer law attorney. Many work on contingency for FDCPA violations. AnnualCreditReport.com is the only federally authorized source for free annual credit reports.</div>`
+    );
+
+    // ── Render each section to PDF ────────────────────────────────
+    const sections = container.querySelectorAll('.pdf-cover, .pdf-section');
+    let isFirst = true;
+    for (const section of sections) {
+      await addSection(section, isFirst);
+      isFirst = false;
+    }
+
+    document.body.removeChild(container);
+
+    // Save
+    const safeFilename = `DebtSnap-Report-${ctx.generatedAt.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+    pdf.save(safeFilename);
+
+  } catch (err) {
+    console.error('PDF error:', err);
+    alert('PDF generation encountered an issue. Please try again or use your browser\'s Print to PDF option.');
+  } finally {
+    if (btn) { btn.textContent = origText; btn.disabled = false; }
+  }
+}
+
+function loadScript(src) {
+  return new Promise((resolve, reject) => {
+    if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+    const s = document.createElement('script');
+    s.src = src; s.onload = resolve; s.onerror = reject;
+    document.head.appendChild(s);
+  });
 }
 
 
