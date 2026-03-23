@@ -47,7 +47,7 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 
 /* Logo — snap fingers mark + wordmark */
 .logo {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 4px;
   background: none; border: none; cursor: pointer; padding: 0;
   font-family: var(--font-serif); font-size: 20px; letter-spacing: -0.02em; color: var(--espresso);
 }
@@ -123,7 +123,7 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .features { max-width: var(--max); margin: 0 auto; border-bottom: 1.5px solid var(--espresso); }
 .feature { display: flex; align-items: center; gap: 20px; padding: 18px var(--pad); border-bottom: 1px solid var(--offwhite); }
 .feature:last-child { border-bottom: none; }
-.f-num { font-family: var(--font-serif); font-size: 28px; color: var(--offwhite); width: 40px; flex-shrink: 0; -webkit-text-stroke: 1px var(--sand); }
+.f-num { font-family: var(--font-serif); font-size: 56px; color: var(--offwhite); width: 64px; flex-shrink: 0; -webkit-text-stroke: 1px var(--sand); line-height: 1; }
 .f-body { display: flex; flex-direction: column; gap: 2px; }
 .f-body strong { font-size: 14px; font-weight: 600; }
 .f-body span { font-size: 13px; color: var(--stone); }
@@ -178,10 +178,10 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .proc-last { border-bottom: none; }
 .proc-left { flex-shrink: 0; width: 44px; display: flex; flex-direction: column; align-items: center; }
 .proc-num {
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 64px; height: 64px; border-radius: 50%;
   background: var(--offwhite); border: 1.5px solid var(--brown);
   display: flex; align-items: center; justify-content: center;
-  font-family: var(--font-serif); font-size: 15px; color: var(--brown); flex-shrink: 0;
+  font-family: var(--font-serif); font-size: 28px; color: var(--brown); flex-shrink: 0;
 }
 .proc-line { flex: 1; width: 1.5px; background: var(--offwhite); margin-top: 8px; }
 .proc-right h3 { font-family: var(--font-serif); font-size: 21px; letter-spacing: -0.01em; margin: 5px 0 12px; }
@@ -380,19 +380,22 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 }
 .plan-card:hover { border-color: var(--brown); }
 .plan-card.selected { border-color: var(--espresso); border-width: 2px; box-shadow: 3px 3px 0 var(--espresso); }
-.plan-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 4px; }
-.plan-card-name { font-size: 15px; font-weight: 600; color: var(--espresso); }
-.plan-card-price { font-family: var(--font-serif); font-size: 17px; color: var(--espresso); text-align: right; }
-.plan-card-price small { display: block; font-family: var(--font-sans); font-size: 11px; color: var(--stone); font-weight: 400; }
-.plan-card-desc { font-size: 13px; color: var(--stone); line-height: 1.5; }
+.plan-card-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 6px; }
+.plan-card-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 8px; }
+.plan-card-left { flex: 1; min-width: 0; }
 .plan-card-radio {
-  position: absolute; top: 14px; right: 16px;
-  width: 18px; height: 18px; border-radius: 50%;
+  flex-shrink: 0; margin-top: 2px;
+  width: 20px; height: 20px; border-radius: 50%;
   border: 1.5px solid var(--sand); background: var(--cream);
   display: flex; align-items: center; justify-content: center;
 }
 .plan-card.selected .plan-card-radio { border-color: var(--espresso); background: var(--espresso); }
 .plan-card.selected .plan-card-radio::after { content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--cream); }
+.plan-card-body { flex: 1; }
+.plan-card-name { font-size: 15px; font-weight: 600; color: var(--espresso); margin-bottom: 2px; }
+.plan-card-price { font-family: var(--font-serif); font-size: 16px; color: var(--espresso); margin-bottom: 6px; }
+.plan-card-price small { font-family: var(--font-sans); font-size: 11px; color: var(--stone); font-weight: 400; margin-left: 2px; }
+.plan-card-desc { font-size: 13px; color: var(--stone); line-height: 1.5; }
 
 .trial-includes { background: var(--offwhite); border-radius: var(--r-md); padding: 18px; margin-bottom: 22px; }
 .ti-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--stone); margin-bottom: 10px; }
@@ -582,7 +585,7 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .rnc-compare { font-size: 11px; color: var(--stone); }
 
 /* ── LOGO WORDMARK SPACING ───────────────────────── */
-.logo-wordmark { margin-left: 2px; }
+.logo-wordmark { margin-left: -6px; }
 
 /* ── DEBT GRID EXPANSION ─────────────────────────── */
 .debt-grid-2 {
@@ -742,3 +745,16 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .rec-note {
   font-size: 11px; color: var(--stone); text-align: center;
 }
+
+/* ── DTI advisable note ──────────────────────────── */
+.m-note {
+  font-size: 10px; color: var(--stone); margin-top: 3px;
+  font-weight: 500; opacity: 0.8;
+}
+.rm-note {
+  font-size: 10px; color: var(--stone); margin-top: 3px;
+  font-weight: 500;
+}
+
+/* ── Counter animation ───────────────────────────── */
+#debt-counter { transition: none; font-variant-numeric: tabular-nums; }

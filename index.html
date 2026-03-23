@@ -22,7 +22,7 @@
             <rect x="7" y="23" width="8" height="7" rx="3.5" fill="#8B1A1A"/>
           </g>
         </svg>
-      </span><span class="logo-wordmark">DebtSnap</span>
+      </span><span class="logo-wordmark" style="margin-left:-4px">DebtSnap</span>
     </button>
     <nav class="header-nav">
       <button class="nav-link" onclick="showPage('home')">About</button>
@@ -56,13 +56,13 @@
       <span class="tier-line tier-2">A custom plan.</span>
       <span class="tier-line tier-3">Your way out.</span>
     </div>
-    <p class="landing-sub">Over 80 million Americans are carrying debt that feels impossible to tackle. DebtSnap gives you a personalized action plan — built on the same research used by consumer law attorneys — completely free.</p>
+    <p class="landing-sub">Over 80 million Americans are carrying debt that feels hard to tackle. DebtSnap gives you a personalized action plan — built on the same research used by consumer law attorneys — completely free.</p>
     <button class="btn-primary red" onclick="startApp()">Get my free snapshot →</button>
     <p class="hero-note">No credit check · Nothing to buy · Your data stays private</p>
   </div>
 
   <div class="stat-strip">
-    <div class="stat"><div class="stat-n">$1.28T</div><div class="stat-l">Credit card debt in the US right now</div></div>
+    <div class="stat"><div class="stat-n" id="debt-counter">$0</div><div class="stat-l">Credit card debt in the US right now</div></div>
     <div class="stat"><div class="stat-n">81%</div><div class="stat-l">Of people in debt want to act but don't know where to start</div></div>
     <div class="stat"><div class="stat-n">15–25%</div><div class="stat-l">What traditional debt agencies charge. We charge a fraction.</div></div>
   </div>
@@ -83,6 +83,7 @@
     <section class="cs">
       <h2>What makes us different</h2>
       <p>Most debt tools give you a budget calculator and a list of tips. DebtSnap does something different: it figures out who you are first — your financial situation, your behavior patterns, your goals — and builds a plan specifically for you.</p>
+      <p>Everything we give you is designed to let you solve this yourself — with the scripts, letter templates, coaching, and pro tips that professionals use, put directly in your hands at a fraction of what an agency charges.</p>
       <p>We use a research-backed behavioral framework developed from analysis of nearly 400,000 real debt cases to understand how you relate to money. That's what drives every recommendation we make.</p>
       <p>We also know from the data that pressure-based, threatening approaches make outcomes worse for most people. Every part of DebtSnap is designed to feel calm, clear, and achievable.</p>
     </section>
@@ -111,8 +112,9 @@
     </div>
     <div class="features">
       <div class="feature"><div class="f-num">01</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
-      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer 6 quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
+      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer a few quick questions</strong><span>We identify your financial behavior profile — no jargon, no judgment.</span></div></div>
       <div class="feature"><div class="f-num">03</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
+      <div class="feature"><div class="f-num">04</div><div class="f-body"><strong>Enrol for ongoing support</strong><span>At $39/month, get everything sorted over a few months — scripts, coaching, check-ins, and pro guidance.</span></div></div>
     </div>
     <div class="trust-bar">
       <span>Built on CFPB research</span><span class="dot">·</span>
@@ -365,20 +367,24 @@
     <!-- Styled plan selector cards — no system select -->
     <div class="plan-cards" id="plan-cards">
       <div class="plan-card selected" data-plan="report" onclick="selectPlan(this)">
-        <div class="plan-card-radio"></div>
-        <div class="plan-card-header">
-          <div class="plan-card-name">Full report</div>
-          <div class="plan-card-price">$49 <small>once-off · yours to keep</small></div>
+        <div class="plan-card-top">
+          <div class="plan-card-left">
+            <div class="plan-card-name">Full report</div>
+            <div class="plan-card-price">$49 <small>once-off · yours to keep</small></div>
+          </div>
+          <div class="plan-card-radio"></div>
         </div>
-        <div class="plan-card-desc">Your complete 5-step action plan, all dispute and negotiation letter templates, and a creditor-by-creditor guide. One payment. No subscription.</div>
+        <div class="plan-card-desc">Your complete 5-step action plan, negotiation scripts, and a creditor-by-creditor guide. One payment. No subscription.</div>
       </div>
       <div class="plan-card" data-plan="sub" onclick="selectPlan(this)">
-        <div class="plan-card-radio"></div>
-        <div class="plan-card-header">
-          <div class="plan-card-name">Full report + ongoing support</div>
-          <div class="plan-card-price">$49 + $39<small>/month thereafter · cancel anytime</small></div>
+        <div class="plan-card-top">
+          <div class="plan-card-left">
+            <div class="plan-card-name">Full report + ongoing support</div>
+            <div class="plan-card-price">$49 + $39<small>/month · cancel anytime</small></div>
+          </div>
+          <div class="plan-card-radio"></div>
         </div>
-        <div class="plan-card-desc">Everything in the report, plus monthly coaching, call scripts, motivation check-ins, updated letter templates, and guidance as your situation evolves.</div>
+        <div class="plan-card-desc">Everything in the report, plus monthly coaching, negotiation scripts, check-ins timed to your profile, and guidance as your situation evolves.</div>
       </div>
     </div>
 

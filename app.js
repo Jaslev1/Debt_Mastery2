@@ -21,12 +21,13 @@ const DEBT_TYPES = [
 ];
 
 const STATUS_OPTS = [
-  { v: 'current',     l: 'Current — on time'  },
-  { v: '30',          l: '30 days late'        },
-  { v: '60',          l: '60 days late'        },
-  { v: '90',          l: '90+ days late'       },
-  { v: 'collections', l: 'In collections'      },
-  { v: 'charged-off', l: 'Charged off'         },
+  { v: 'current',     l: 'Current — on time'          },
+  { v: '30',          l: '30 days late'                },
+  { v: '60',          l: '60 days late'                },
+  { v: '90',          l: '90+ days late'               },
+  { v: 'collections', l: 'In collections'              },
+  { v: 'charged-off', l: 'Charged off'                 },
+  { v: 'no-contact',  l: 'No letters or calls received'},
 ];
 
 // ── QUIZ ────────────────────────────────────────────
@@ -38,8 +39,13 @@ const QUIZ = [
   },
   {
     id: 'q2',
-    text: 'In the last 90 days, have you responded to any letters or calls from creditors?',
-    opts: ["Yes, I've been in contact", "I've seen them but haven't responded", "No — I've been avoiding them"],
+    text: 'In the last 90 days, have you had contact from creditors — letters, calls, or notices?',
+    opts: [
+      "Yes — I've responded and been in contact",
+      "Yes — received them but haven't responded yet",
+      "No — I've been avoiding them",
+      "No — I haven't received any contact",
+    ],
   },
   {
     id: 'q3',
@@ -668,7 +674,7 @@ function renderResults(ctx, plan) {
   const dspCls = ctx.disposable >= 0 ? 'pos' : 'neg';
   document.getElementById('metrics-row').innerHTML = `
     <div class="m-cell"><div class="m-val">${fmt(ctx.total)}</div><div class="m-lbl">Total debt</div></div>
-    <div class="m-cell"><div class="m-val ${dtiCls}">${ctx.dti!==null?ctx.dti+'%':'—'}</div><div class="m-lbl">Debt-to-income</div></div>
+    <div class="m-cell"><div class="m-val ${dtiCls}">${ctx.dti!==null?ctx.dti+'%':'—'}</div><div class="m-lbl">Debt-to-income</div>${ctx.dti!==null?'<div class="m-note">Advisable: under 36%</div>':''}</div>
     <div class="m-cell"><div class="m-val ${dspCls}">${fmt(Math.abs(ctx.disposable))}</div><div class="m-lbl">${ctx.disposable>=0?'Monthly surplus':'Monthly shortfall'}</div></div>`;
 
   const profileEl = document.getElementById('profile-card'); profileEl.innerHTML = `
@@ -860,6 +866,7 @@ function buildReportPage() {
     <div class="report-metric">
       <div class="rv ${dtiColor}">${dti !== null ? dti + '%' : '—'}</div>
       <div class="rl">Debt-to-income${dtiRating ? ' · ' + dtiRating : ''}</div>
+      ${dti !== null ? '<div class="rm-note">Advisable: under 36%</div>' : ''}
     </div>
     <div class="report-metric">
       <div class="rv ${disposable >= 0 ? 'pos' : 'neg'}">${fmt(Math.abs(disposable))}</div>
@@ -1158,21 +1165,23 @@ async function downloadReport() {
   }
   @page {
     size: A4;
-    margin: 18mm 18mm 20mm 18mm;
+    margin: 16mm 18mm 18mm 18mm;
   }
-  @page :first { margin-top: 0; margin-left: 0; margin-right: 0; }
 
   /* ── Layout ── */
   .page { max-width: 100%; padding: 0; }
 
-  /* ── Cover — full-bleed espresso, breaks to new page after ── */
+  /* ── Cover — full page, espresso background ── */
   .cover {
     background: var(--espresso);
     color: var(--cream);
-    padding: 52px 48px 44px;
-    margin: -18mm -18mm 0;    /* bleed to page edge on print */
+    padding: 52px 48px 48px;
     break-after: page;
     page-break-after: always;
+    min-height: 240mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
   .cover-eyebrow { font-size: 10px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--sand); margin-bottom: 20px; }
   .cover h1 { font-family: 'DM Serif Display', Georgia, serif; font-size: 44px; letter-spacing: -0.02em; line-height: 1.05; margin-bottom: 16px; color: var(--cream); }
@@ -1184,9 +1193,10 @@ async function downloadReport() {
   h2 {
     font-family: 'DM Serif Display', Georgia, serif;
     font-size: 19px; letter-spacing: -0.01em; color: var(--espresso);
-    margin: 36px 0 10px; padding-bottom: 8px;
+    margin: 32px 0 10px; padding-bottom: 8px;
     border-bottom: 1.5px solid var(--espresso);
     break-after: avoid; page-break-after: avoid;
+    break-before: avoid;
   }
   h3 { font-size: 14px; font-weight: 600; margin: 14px 0 5px; color: var(--espresso); }
   p { margin-bottom: 10px; color: var(--stone); }
@@ -1244,6 +1254,7 @@ async function downloadReport() {
     padding: 14px; margin-bottom: 12px;
     break-inside: avoid; page-break-inside: avoid;
     background: var(--cream);
+    orphans: 3; widows: 3;
   }
   .action.urgent { border-color: var(--red); }
   .a-head { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 8px; }
@@ -1271,7 +1282,7 @@ async function downloadReport() {
   .a-next-body { font-size: 11px; color: var(--stone); line-height: 1.65; }
 
   /* ── Rights ── */
-  .rights-section { break-before: page; page-break-before: always; }
+  .rights-section { margin-top: 8px; }
   .rights-item { padding: 12px 0; border-bottom: 1px solid var(--offwhite); break-inside: avoid; page-break-inside: avoid; }
   .rights-item:last-child { border-bottom: none; }
   .rights-item.urgent { background: var(--red-xlt); padding: 12px; border-radius: 6px; border: 1px solid var(--red-lt); margin-bottom: 8px; }
@@ -1282,7 +1293,7 @@ async function downloadReport() {
   .rights-action { font-size: 11px; font-weight: 600; color: var(--green); }
 
   /* ── What's next ── */
-  .next-section { break-before: page; page-break-before: always; }
+  .next-section { margin-top: 8px; }
   .next-intro { font-size: 13px; color: var(--stone); line-height: 1.7; margin-bottom: 16px; font-style: italic; }
   .next-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; }
   .next-item { background: var(--cream); border: 1.5px solid var(--espresso); border-radius: 8px; padding: 12px; break-inside: avoid; }
@@ -1466,9 +1477,9 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
 
 <div class="enroll-box">
   <div class="enroll-price">$39<span>/month</span></div>
-  <div class="enroll-desc">Cancel anytime · No contracts · No percentage of your debt</div>
+  <div class="enroll-desc">When you're ready to go further. Cancel anytime &middot; No contracts &middot; No percentage of your debt.</divv>
   <div class="enroll-compare">Traditional debt agencies charge 15–25% of your total balance. On ${fmt(ctx.total)}, that is ${fmt(Math.round(ctx.total*0.2))} or more.</div>
-  <a href="https://debtsnap.com" class="enroll-cta">Enroll in ongoing support →</a>
+  <a href="https://debtsnap.com" class="enroll-cta">Learn more about ongoing support →</a>
   <div class="enroll-items">Negotiation scripts · Coaching · Check-ins · Progress tracking</div>
 </div>
 
@@ -1545,4 +1556,37 @@ function fmt(n) { return '$' + Math.round(n).toLocaleString('en-US'); }
 // ── INIT ─────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   showPage('home');
+  startDebtCounter();
 });
+
+function startDebtCounter() {
+  const el = document.getElementById('debt-counter');
+  if (!el) return;
+  const target = 1280000000000; // $1.28T
+  const duration = 2200;
+  const steps = 80;
+  const increment = target / steps;
+  let current = 0;
+  let step = 0;
+  const ease = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out
+  const timer = setInterval(() => {
+    step++;
+    const t = step / steps;
+    current = target * ease(t);
+    if (step >= steps) { current = target; clearInterval(timer); }
+    // Format as $X.XXT or $XXXb
+    let display;
+    if (current >= 1e12) display = '$' + (current / 1e12).toFixed(2) + 'T';
+    else display = '$' + Math.round(current / 1e9) + 'B';
+    el.textContent = display;
+  }, duration / steps);
+
+  // Restart when About page is revisited (intersection observer on stat-strip)
+  const strip = document.querySelector('.stat-strip');
+  if (strip && 'IntersectionObserver' in window) {
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) { step = 0; current = 0; } });
+    }, { threshold: 0.3 });
+    obs.observe(strip);
+  }
+}
