@@ -1090,6 +1090,151 @@ function buildReportPage() {
     },
   ];
 
+  
+  // ── SECTION 4b: Sample letter ──────────────────────────────
+  const hasCollections = ctx.inCollections;
+  const letterTitle = hasCollections ? 'Debt Validation Letter' : 'Hardship Request Letter';
+  const letterLaw   = hasCollections ? 'FDCPA §809(b)' : 'General consumer rights';
+
+  const validationLetter = `
+    <p>[Your Full Name]<br>[Your Address]<br>[City, State ZIP]<br>[Date]</p>
+    <p>[Collector Company Name]<br>[Collector Address]</p>
+    <p>Re: Account #<span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> &nbsp;|&nbsp; Original Creditor: <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+    <p>To Whom It May Concern,</p>
+    <p>I am writing in response to your recent communication regarding the above-referenced account. I am exercising my rights under the Fair Debt Collection Practices Act (FDCPA), 15 U.S.C. §1692g, to request validation of this debt.</p>
+    <p>Please provide the following within 30 days of receipt of this letter:</p>
+    <p>1. The name and address of the original creditor<br>
+    2. A complete statement of the account showing the amount owed<br>
+    3. Proof that your firm is licensed to collect debt in my state<br>
+    4. Proof that you are authorized to collect this particular debt</p>
+    <p>Until you have provided this verification, please <strong>cease all collection activity</strong> including phone calls, letters, and credit reporting, as required by 15 U.S.C. §1692g(b).</p>
+    <p>This is not a refusal to pay. This is a formal request for debt validation as guaranteed by federal law.</p>
+    <p>Sincerely,<br><span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+    <p><em>Send via USPS Certified Mail with Return Receipt. Keep the green card.</em></p>`;
+
+  const hardshipLetter = `
+    <p>[Your Full Name]<br>[Your Address]<br>[City, State ZIP]<br>[Date]</p>
+    <p>[Creditor Name] — Financial Hardship Department<br>[Address]</p>
+    <p>Re: Account #<span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+    <p>Dear Hardship Review Team,</p>
+    <p>I am writing to request a financial hardship arrangement on the above account. I have been a customer since <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> and have every intention of honoring my obligation. However, due to <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>, I am temporarily unable to maintain my current payment level.</p>
+    <p>My current situation: Monthly income of <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> and essential expenses of <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> leave very limited funds available for debt service.</p>
+    <p>I am requesting consideration for one or more of the following:<br>
+    &mdash; Temporary reduction in minimum payment<br>
+    &mdash; Interest rate reduction for a defined period<br>
+    &mdash; Waiver of recent late fees<br>
+    &mdash; A short-term payment deferral</p>
+    <p>I am committed to working toward a full repayment plan as my situation stabilizes. Please contact me to discuss available options.</p>
+    <p>Sincerely,<br><span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></p>`;
+
+  document.getElementById('report-sample-letter').innerHTML = `
+    <div class="sample-letter">
+      <div class="sl-header">
+        <span class="sl-header-title">Sample: ${letterTitle}</span>
+        <span class="sl-header-tag">${letterLaw}</span>
+      </div>
+      <div class="sl-body">
+        ${hasCollections ? validationLetter : hardshipLetter}
+      </div>
+      <div class="sl-footer">
+        Fill in the highlighted fields. Send certified mail. Full subscription includes pre-filled versions matched to each of your specific accounts.
+      </div>
+    </div>`;
+
+  // ── SECTION 4c: Call script ─────────────────────────────────
+  const hasCCLate = ctx.debts.some(d => d.type === 'credit-card' && ['30','60','90'].includes(d.status));
+  const scriptTitle = ctx.hasPublicNP ? 'PSLF Employer Certification Call' : hasCCLate ? 'Credit Card Hardship Call' : 'Creditor Negotiation Call';
+
+  const hardshipScript = `
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"Hello, I'm calling about my account — account number <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>. My name is <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>."</span></div>
+    <div class="ss-note">Wait for them to pull up your account. Write down the agent's name.</div>
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"I'm experiencing a financial hardship and I want to find a solution before this account gets further behind. Can you transfer me to your hardship program or retention team?"</span></div>
+    <div class="ss-note">Do not say "I can't pay." Always frame it as seeking a solution. If they say they have no hardship program, ask for a supervisor.</div>
+    <div class="ss-line"><span class="ss-speaker">Them</span><span class="ss-text">[They may ask about your hardship situation]</span></div>
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"I've had a reduction in income due to [brief explanation]. My monthly take-home is now [amount] and after essential expenses I have very limited funds available. I want to stay current — I'm hoping you can offer a temporary interest rate reduction or a lower minimum payment for a defined period."</span></div>
+    <div class="ss-note">Have your numbers ready: income, expenses, and what you could realistically pay. Be specific.</div>
+    <div class="ss-line"><span class="ss-speaker">Them</span><span class="ss-text">[They offer an arrangement]</span></div>
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"Thank you. Before I agree, can you send me the terms of that arrangement in writing — by email or letter — before I make any payment? I want to make sure I have the details correct."</span></div>
+    <div class="ss-note">Never make a payment based on a verbal promise. Always get it in writing first.</div>`;
+
+  const pslfScript = `
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"Hello, I'm calling to ask about the Public Service Loan Forgiveness program and submitting my employer certification form. My name is <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span> and my account number is <span class="sl-placeholder">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>."</span></div>
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"I work for [employer name], which is a [government / 501(c)(3) nonprofit]. I want to confirm my loans are eligible for PSLF and get my employment certification form reviewed. Can you walk me through the current process?"</span></div>
+    <div class="ss-note">Ask them to confirm: (1) your loan type is eligible, (2) your repayment plan qualifies, (3) how many qualifying payments are already on record.</div>
+    <div class="ss-line"><span class="ss-speaker">You</span><span class="ss-text">"Can you also confirm my current repayment plan qualifies for PSLF? If not, what do I need to switch to, and can we do that today?"</span></div>
+    <div class="ss-note">Many people are on the wrong plan and don't know it. IDR plans qualify; standard 10-year plans do not count toward PSLF.</div>`;
+
+  document.getElementById('report-sample-script').innerHTML = `
+    <div class="sample-script">
+      <div class="ss-header">
+        <span class="ss-header-title">Sample script: ${scriptTitle}</span>
+        <span class="ss-header-tag">Word-for-word guidance</span>
+      </div>
+      <div class="ss-body">
+        ${ctx.hasPublicNP ? pslfScript : hardshipScript}
+      </div>
+      <div class="ss-footer">
+        Adapt to your situation. Full subscription includes scripts for every creditor type, tailored to your ${info.name} profile.
+      </div>
+    </div>`;
+
+  // ── SECTION 4d: Pro tips ────────────────────────────────────
+  const tips = [
+    "Never make a payment on a debt in collections before receiving written validation — a payment can reset the statute of limitations clock, potentially extending how long they can sue you.",
+    "Record the date, time, agent name, and employee ID of every creditor call. Violations of your rights are worth up to $1,000 each in statutory damages — documentation is your leverage.",
+    "Creditors typically become more willing to negotiate as accounts age. Charged-off debt sold to collectors was often purchased for 1–7 cents on the dollar — they have enormous room to settle.",
+    "Your credit score matters less than you think right now. If you are already behind, your score is already affected. Focus on resolving the debt, not protecting a number that is already impacted.",
+    "Medical debt under $500 was removed from all three major credit reports in 2023 under new rules. If you have older medical debt under that threshold, it may already be removable from your report.",
+  ];
+
+  if (ctx.hasFedStudent) {
+    tips.push("Student loan interest capitalizes when you leave forbearance — it gets added to your principal balance and you then pay interest on a larger amount. Enrol in IDR before forbearance ends to avoid this.");
+  }
+
+  document.getElementById('report-pro-tips').innerHTML = `
+    <div class="tips-box">
+      <div class="tips-box-title">Pro tips — things most people don't know</div>
+      ${tips.map(t => `<div class="tip-item"><div class="tip-dot"></div><div>${t}</div></div>`).join('')}
+    </div>`;
+
+  // ── SECTION 5b: All profiles comparison ─────────────────────
+  const ALL_PROFILES = [
+    { code:'WAOR', name:'The Focused Planner',       traits:'Engaged · Capable · Organized · Analytical' },
+    { code:'WAOE', name:'The Ready Worrier',         traits:'Engaged · Capable · Organized · Feeling-led' },
+    { code:'WACR', name:'The Analytical Juggler',    traits:'Engaged · Capable · Scattered · Analytical' },
+    { code:'WACE', name:'The Well-Intentioned Juggler', traits:'Engaged · Capable · Scattered · Feeling-led' },
+    { code:'WIOR', name:'The Organized Rebuilder',   traits:'Engaged · Constrained · Organized · Analytical' },
+    { code:'WIOE', name:'The Anxious Organizer',     traits:'Engaged · Constrained · Organized · Feeling-led' },
+    { code:'WICR', name:'The Determined Rebuilder',  traits:'Engaged · Constrained · Scattered · Analytical' },
+    { code:'WICE', name:'The Overwhelmed Doer',      traits:'Engaged · Constrained · Scattered · Feeling-led' },
+    { code:'DICR', name:'The Cautious Realist',      traits:'Guarded · Constrained · Scattered · Analytical' },
+    { code:'DICE', name:'The Exhausted Avoider',     traits:'Guarded · Constrained · Scattered · Feeling-led' },
+  ];
+
+  document.getElementById('report-profile-table').innerHTML = `
+    <div class="profile-table-wrap">
+      <table class="profile-table">
+        <thead>
+          <tr>
+            <th>Code</th>
+            <th>Profile name</th>
+            <th>Key traits</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${ALL_PROFILES.map(p => {
+            const isYou = p.code === ctx.archetype;
+            return `<tr class="${isYou ? 'your-profile' : ''}">
+              <td class="pt-code">${p.code}</td>
+              <td class="pt-name">${p.name}${isYou ? '<span class="pt-you-badge">You</span>' : ''}</td>
+              <td class="pt-traits">${p.traits}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>`;
+
+
   document.getElementById('report-next').innerHTML = `
     <p class="report-next-intro">Your report covers the foundational picture and your first five steps. What comes next — actually executing those steps, handling the responses, navigating the follow-ups — is where most people stall. That is what the ongoing support covers.</p>
 
@@ -1104,7 +1249,7 @@ function buildReportPage() {
     <div class="report-enroll-card">
       <div class="rec-eyebrow">Optional — ongoing support</div>
       <div class="rec-intro">When you're ready to go further, ongoing support gives you the tools to execute every step: coaching, check-ins timed to your profile, and guidance as your situation evolves.</div>
-      <div class="rec-price-row"><span class="rec-price-sm">$39</span><span class="rec-per-sm">/month &nbsp;·&nbsp; cancel anytime</span></div>
+      <div class="rec-price-row"><span class="rec-price-sm">$69</span><span class="rec-per-sm">/month &nbsp;·&nbsp; cancel anytime</span></div>
       <button class="btn-secondary rec-btn-soft" onclick="showPage('trial')">Learn more about ongoing support</button>
       <div class="rec-note">No contracts. No percentage of your debt. Start when you're ready.</div>
     </div>`;
@@ -1320,6 +1465,44 @@ async function downloadReport() {
   .enroll-note { font-size: 10px; color: var(--bark); }
 
   /* ── Disclaimer ── */
+  /* Sample letter */
+  .sl { border:1.5px solid #1E110A; border-radius:8px; overflow:hidden; margin:14px 0; break-inside:avoid; page-break-inside:avoid; }
+  .sl-hd { background:#1E110A; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
+  .sl-hd-t { font-size:12px; font-weight:600; }
+  .sl-hd-tag { font-size:10px; color:#8A7A6A; text-transform:uppercase; letter-spacing:.05em; }
+  .sl-bd { padding:14px; font-size:11.5px; line-height:1.75; color:#1E110A; background:#F7F3EE; }
+  .sl-bd p { margin-bottom:9px; }
+  .sl-ph { border-bottom:1px dashed #5C3D2E; display:inline-block; min-width:100px; color:#7A6A58; font-style:italic; }
+  .sl-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10.5px; color:#7A6A58; }
+  /* Call script */
+  .ss { border:1.5px solid #5C3D2E; border-radius:8px; overflow:hidden; margin:14px 0; break-inside:avoid; page-break-inside:avoid; }
+  .ss-hd { background:#5C3D2E; color:#F7F3EE; padding:9px 14px; display:flex; justify-content:space-between; }
+  .ss-hd-t { font-size:12px; font-weight:600; }
+  .ss-hd-tag { font-size:10px; color:#C4B5A0; text-transform:uppercase; letter-spacing:.05em; }
+  .ss-bd { padding:14px; }
+  .ss-ln { display:flex; gap:8px; margin-bottom:8px; align-items:flex-start; }
+  .ss-spk { font-size:9px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:#7A6A58; min-width:44px; margin-top:2px; flex-shrink:0; }
+  .ss-txt { font-size:11.5px; color:#1E110A; line-height:1.6; }
+  .ss-note { font-size:10.5px; color:#7A6A58; background:#EDE5DA; border-radius:4px; padding:6px 10px; margin:3px 0 8px 52px; font-style:italic; }
+  .ss-ft { padding:8px 14px; background:#EDE5DA; border-top:1px solid #C4B5A0; font-size:10.5px; color:#7A6A58; }
+  /* Tips */
+  .tips { background:#EDE5DA; border-radius:8px; padding:14px 16px; margin:12px 0; break-inside:avoid; }
+  .tips-t { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#5C3D2E; margin-bottom:8px; }
+  .tip { display:flex; gap:8px; font-size:11.5px; color:#1E110A; margin-bottom:6px; align-items:flex-start; line-height:1.55; }
+  .tip-d { width:5px; height:5px; border-radius:50%; background:#8B1A1A; flex-shrink:0; margin-top:5px; }
+  /* Profile table */
+  .pt { width:100%; border-collapse:collapse; font-size:11.5px; margin:10px 0; }
+  .pt th { text-align:left; font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:#7A6A58; padding:6px 8px; border-bottom:1.5px solid #1E110A; background:#EDE5DA; }
+  .pt td { padding:7px 8px; border-bottom:1px solid #EDE5DA; vertical-align:top; }
+  .pt tr.you { background:#FAF3F3; }
+  .pt tr.you td { font-weight:500; }
+  .pt .code { font-family:'DM Serif Display',serif; font-size:12px; color:#5C3D2E; }
+  .pt tr.you .code { color:#8B1A1A; }
+  .pt .pname { font-weight:600; }
+  .pt tr.you .pname { color:#8B1A1A; }
+  .you-b { display:inline-block; font-size:8px; font-weight:700; background:#8B1A1A; color:#F7F3EE; padding:1px 5px; border-radius:3px; margin-left:5px; }
+  .pt-traits { font-size:10.5px; color:#7A6A58; }
+
   .disclaimer {
     font-size: 11px; color: var(--sand); font-style: italic;
     margin-top: 32px; padding-top: 16px; border-top: 1px solid var(--offwhite);
@@ -1476,7 +1659,7 @@ ${ctx.debts.some(d=>d.type==='medical') ? `
 </div>
 
 <div class="enroll-box">
-  <div class="enroll-price">$39<span>/month</span></div>
+  <div class="enroll-price">$69<span>/month</span></div>
   <div class="enroll-desc">When you're ready to go further. Cancel anytime &middot; No contracts &middot; No percentage of your debt.</divv>
   <div class="enroll-compare">Traditional debt agencies charge 15–25% of your total balance. On ${fmt(ctx.total)}, that is ${fmt(Math.round(ctx.total*0.2))} or more.</div>
   <a href="https://debtsnap.com" class="enroll-cta">Learn more about ongoing support →</a>
@@ -1563,16 +1746,17 @@ function startDebtCounter() {
   const el = document.getElementById('debt-counter');
   if (!el) return;
   const target = 1280000000000; // $1.28T
-  const duration = 2200;
-  const steps = 80;
+  const duration = 3800;
+  const steps = 120;
   const increment = target / steps;
-  let current = 0;
+  const startFrom = 800000000000; // start from $800B
+  let current = startFrom;
   let step = 0;
   const ease = t => t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // ease in-out
   const timer = setInterval(() => {
     step++;
     const t = step / steps;
-    current = target * ease(t);
+    current = startFrom + (target - startFrom) * ease(t);
     if (step >= steps) { current = target; clearInterval(timer); }
     // Format as $X.XXT or $XXXb
     let display;
