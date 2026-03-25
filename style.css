@@ -105,7 +105,7 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 /* Three-tier stacked headline */
 .tier-headline { margin-bottom: 28px; }
 .tier-line { display: block; font-family: var(--font-serif); line-height: 1.05; letter-spacing: -0.02em; }
-.tier-1 { font-size: clamp(22px, 5vw, 30px); color: var(--red); font-weight: 400; margin-bottom: 4px; font-style: italic; }
+.tier-1 { font-size: clamp(24px, 5.5vw, 33px); color: var(--red); font-weight: 400; margin-bottom: 4px; font-style: italic; }
 .tier-2 { font-size: clamp(32px, 7vw, 48px); color: var(--espresso); margin-bottom: 4px; }
 .tier-3 { font-size: clamp(32px, 7vw, 48px); color: var(--stone); font-style: normal; }
 
@@ -286,8 +286,8 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .q-text { font-family: var(--font-serif); font-size: 19px; line-height: 1.4; margin-bottom: 13px; letter-spacing: -0.01em; }
 .opts { display: flex; flex-direction: column; gap: 7px; }
 .opt { text-align: left; padding: 10px 14px; border: 1.5px solid var(--offwhite); border-radius: var(--r-md); font-family: var(--font-sans); font-size: 14px; color: var(--espresso); background: var(--cream); cursor: pointer; transition: all .15s; line-height: 1.4; }
-.opt:hover { border-color: var(--brown); background: var(--offwhite); }
-.opt.sel { background: var(--red-lt); border-color: var(--red); font-weight: 500; }
+.opt:hover { border-color: var(--red); background: var(--red-xlt); }
+.opt.sel { background: var(--offwhite); border-color: var(--brown); border-width: 2px; font-weight: 600; color: var(--espresso); }
 
 /* ══ LOADING ═════════════════════════════════════ */
 .loading-wrap { max-width: var(--max); margin: 0 auto; padding: 80px var(--pad); text-align: center; }
@@ -817,3 +817,6 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .tip-item { display: flex; gap: 10px; font-size: 13px; color: var(--espresso); margin-bottom: 8px; align-items: flex-start; line-height: 1.55; }
 .tip-item:last-child { margin-bottom: 0; }
 .tip-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); flex-shrink: 0; margin-top: 6px; }
+
+/* ── #8 Enroll card optional label ──────────────────────── */
+.rec-eyebrow { font-size: 12px !important; font-weight: 700 !important; color: var(--cream) !important; letter-spacing: .04em !important; margin-bottom: 12px !important; }
