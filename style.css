@@ -1,30 +1,30 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  /* Wine and Concrete palette */
-  --cream:      #D8E0D8;
-  --offwhite:   #C8D2C8;
-  --sand:       #7A9488;
-  --stone:      #4A4A4A;
-  --brown:      #7A9488;
-  --bark:       #5A7468;
-  --espresso:   #1E0A1E;
+  /* Brown Blues palette */
+  --cream:      #F0EFF4;
+  --offwhite:   #E2E1E8;
+  --sand:       #C4A96A;
+  --stone:      #8A7A5A;
+  --brown:      #C4A96A;
+  --bark:       #9A7E42;
+  --espresso:   #263859;
 
-  /* Primary accent — burgundy */
-  --red:        #7A0E14;
-  --red-mid:    #9A1A20;
-  --red-lt:     #E8C8C8;
-  --red-xlt:    #F4EDED;
+  /* Primary accent — gold */
+  --red:        #C4A96A;
+  --red-mid:    #9A7E42;
+  --red-lt:     #F0E6CC;
+  --red-xlt:    #FAF5EC;
 
-  /* Sage — secondary accent */
-  --amber:      #7A9488;
-  --amber-lt:   #D0DCD8;
-  --amber-dk:   #4A6458;
+  /* Teal blue — secondary accent */
+  --amber:      #3D6B7A;
+  --amber-lt:   #C8DAE0;
+  --amber-dk:   #2A4E5C;
 
   /* Semantic */
   --green:      #2A6040;
   --green-lt:   #E6F2EB;
-  --danger-lt:  #E8C8C8;
+  --danger-lt:  #F0E6CC;
 
   --font-serif: 'DM Serif Display', Georgia, serif;
   --font-sans:  'DM Sans', system-ui, sans-serif;
