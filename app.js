@@ -227,18 +227,32 @@ function showStep(id, pct) {
   document.getElementById('page-' + id).classList.add('active');
   const pw = document.getElementById('progress-wrap');
   pw.style.display = (id === 'home') ? 'none' : 'block';
-  document.getElementById('progress-fill').style.width = pct + '%';
+
+  // Segment bar: 1=33, 2=66, 3=100
+  const segs = [
+    { el: document.getElementById('seg1'), threshold: 33 },
+    { el: document.getElementById('seg2'), threshold: 66 },
+    { el: document.getElementById('seg3'), threshold: 100 },
+  ];
+  segs.forEach(s => {
+    s.el.classList.remove('active', 'done');
+    if (pct === s.threshold) s.el.classList.add('active');
+    else if (pct > s.threshold) s.el.classList.add('done');
+  });
+
+  // Step labels
   const steps = ['ps1','ps2','ps3'];
   const thresholds = [33, 66, 100];
   steps.forEach((s, i) => {
     const el = document.getElementById(s);
     el.classList.remove('active','done');
-    if (pct >= thresholds[i]) {
-      el.classList.add(pct === thresholds[i] ? 'active' : 'done');
-    }
+    if (pct === thresholds[i]) el.classList.add('active');
+    else if (pct > thresholds[i]) el.classList.add('done');
   });
-  // Step 3 active at 100%, done never — always show active at final step
+  // Step 3 always active (not done) at 100%
   if (pct === 100) {
+    document.getElementById('seg3').classList.remove('done');
+    document.getElementById('seg3').classList.add('active');
     document.getElementById('ps3').classList.remove('done');
     document.getElementById('ps3').classList.add('active');
   }

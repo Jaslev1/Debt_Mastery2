@@ -39,7 +39,13 @@
 </header>
 
 <div class="progress-wrap" id="progress-wrap">
-  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+  <div class="progress-segments-wrap">
+    <div class="progress-segments">
+      <div class="prog-seg" id="seg1"></div>
+      <div class="prog-seg" id="seg2"></div>
+      <div class="prog-seg" id="seg3"></div>
+    </div>
+  </div>
   <div class="progress-steps">
     <button class="ps" id="ps1" onclick="showStep('s1',33)"><span class="ps-num">1</span>Your debts</button>
     <button class="ps" id="ps2" onclick="showStep('s2',66)"><span class="ps-num">2</span>Your profile</button>
@@ -116,11 +122,11 @@
       </div>
     </div>
     <div class="features">
-      <div class="features-header">Our easy 4-step process</div>
-      <div class="feature"><div class="f-num">01</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
-      <div class="feature"><div class="f-num">02</div><div class="f-body"><strong>Answer a few quick questions</strong><span>We identify your financial behavior profile. No jargon, no judgment.</span></div></div>
-      <div class="feature"><div class="f-num">03</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
-      <div class="feature"><div class="f-num">04</div><div class="f-body"><strong>Get the ongoing support you need</strong><span>At $69/month, get scripts, coaching, check-ins, and pro guidance over a few months.</span></div></div>
+      <div class="features-header">Our easy 4-part process</div>
+      <div class="feature"><div class="f-num">A</div><div class="f-body"><strong>Enter your debts</strong><span>Credit cards, student loans, medical. Estimates are fine.</span></div></div>
+      <div class="feature"><div class="f-num">B</div><div class="f-body"><strong>Answer a few quick questions</strong><span>We identify your financial behavior profile. No jargon, no judgment.</span></div></div>
+      <div class="feature"><div class="f-num">C</div><div class="f-body"><strong>Get your personalized plan</strong><span>Steps ranked by impact, tailored to your exact situation.</span></div></div>
+      <div class="feature"><div class="f-num">D</div><div class="f-body"><strong>Get the ongoing support you need</strong><span>At $69/month, get scripts, coaching, check-ins, and pro guidance over a few months.</span></div></div>
     </div>
     <div class="trust-bar">
       <span>Built on CFPB research</span><span class="dot">·</span>
@@ -253,7 +259,7 @@
   </div>
   <div class="debt-section">
     <div id="debt-list"></div>
-    <button class="btn-add" onclick="addDebt()"><strong>+ Add another account / debt type</strong></button>
+    <button class="btn-add" onclick="addDebt()">+ Add another account / debt type</button>
   </div>
   <div class="total-banner" id="total-banner" style="display:none">
     <span>Total debt</span><span class="total-val" id="total-val">$0</span>
@@ -311,7 +317,7 @@
     <p class="step-sub">These aren't about your finances — they're about how you relate to them. Honest answers give you a better plan. There are no wrong answers.</p>
   </div>
   <div id="quiz-container"></div>
-  <div class="err-msg" id="err2">Please answer all 5 questions to continue.</div>
+  <div class="err-msg" id="err2">Please answer all 6 questions to continue.</div>
   <div class="step-nav">
     <button class="btn-ghost" onclick="showPage('s1')">← Back</button>
     <button class="btn-primary" onclick="next2()">Generate my snapshot →</button>

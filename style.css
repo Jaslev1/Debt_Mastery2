@@ -78,16 +78,21 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 
 /* ── PROGRESS ───────────────────────────────── */
 .progress-wrap { display: none; border-bottom: 1.5px solid var(--espresso); background: var(--cream); }
-.progress-track { height: 5px; background: var(--offwhite); }
-.progress-fill { height: 5px; background: var(--red); transition: width .4s ease; }
-.progress-steps { max-width: var(--max); margin: 0 auto; padding: 10px var(--pad); display: flex; gap: 8px; }
+.progress-segments-wrap { max-width: var(--max); margin: 0 auto; padding: 12px var(--pad) 0; }
+.progress-segments { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 4px; }
+.prog-seg { height: 5px; background: var(--offwhite); border-radius: 3px; transition: background .3s ease; }
+.prog-seg.active { background: var(--red); }
+.prog-seg.done { background: var(--brown); }
+.progress-steps { max-width: var(--max); margin: 0 auto; padding: 8px var(--pad) 10px; display: grid; grid-template-columns: 1fr 1fr 1fr; }
 .ps {
   font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase;
   color: var(--sand); background: none; border: none; cursor: pointer;
-  padding: 5px 12px; border-radius: var(--r-sm); transition: all .15s;
+  padding: 5px 0; transition: all .15s;
   display: flex; align-items: center; gap: 7px; font-family: var(--font-sans);
 }
-.ps:hover { background: var(--offwhite); color: var(--stone); }
+.ps:nth-child(2) { justify-content: center; }
+.ps:nth-child(3) { justify-content: flex-end; }
+.ps:hover { color: var(--stone); }
 .ps .ps-num {
   display: inline-flex; align-items: center; justify-content: center;
   width: 20px; height: 20px; border-radius: 50%;
@@ -271,8 +276,8 @@ body { font-family: var(--font-sans); color: var(--espresso); min-height: 100vh;
 .debt-grid select:focus, .debt-grid input:focus { outline: none; background: var(--cream); border-color: var(--brown); }
 .remove-btn { background: none; border: none; cursor: pointer; color: var(--sand); font-size: 18px; line-height: 1; padding: 4px; border-radius: 4px; align-self: end; margin-bottom: 5px; transition: color .15s; }
 .remove-btn:hover { color: var(--red); }
-.btn-add { background: none; border: 1.5px dashed var(--sand); border-radius: var(--r-md); width: 100%; padding: 10px; font-family: var(--font-sans); font-size: 13px; font-weight: 500; color: var(--stone); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 2px; }
-.btn-add:hover { border-color: var(--brown); color: var(--brown); background: var(--offwhite); }
+.btn-add { background: var(--offwhite); border: 2px dashed var(--brown); border-radius: var(--r-md); width: 100%; padding: 14px; font-family: var(--font-sans); font-size: 14px; font-weight: 700; color: var(--brown); cursor: pointer; transition: all .15s; display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 6px; letter-spacing: .01em; }
+.btn-add:hover { border-color: var(--espresso); color: var(--espresso); background: var(--cream); }
 
 .total-banner { max-width: var(--max); margin: 0 auto; display: flex; justify-content: space-between; align-items: center; background: var(--espresso); border-top: 1.5px solid var(--espresso); border-bottom: 1.5px solid var(--espresso); padding: 13px var(--pad); }
 .total-banner span:first-child { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--sand); }
