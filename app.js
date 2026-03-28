@@ -226,19 +226,22 @@ function showStep(id, pct) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
   const pw = document.getElementById('progress-wrap');
-  pw.style.display = 'block';
+  pw.style.display = (id === 'home') ? 'none' : 'block';
   document.getElementById('progress-fill').style.width = pct + '%';
   const steps = ['ps1','ps2','ps3'];
-  const pcts  = [33, 66, 100];
+  const thresholds = [33, 66, 100];
   steps.forEach((s, i) => {
     const el = document.getElementById(s);
     el.classList.remove('active','done');
-    if (pct === pcts[i]) {
-      el.classList.add('active');
-    } else if (pct > pcts[i]) {
-      el.classList.add('done');
+    if (pct >= thresholds[i]) {
+      el.classList.add(pct === thresholds[i] ? 'active' : 'done');
     }
   });
+  // Step 3 active at 100%, done never — always show active at final step
+  if (pct === 100) {
+    document.getElementById('ps3').classList.remove('done');
+    document.getElementById('ps3').classList.add('active');
+  }
   window.scrollTo(0, 0);
 }
 

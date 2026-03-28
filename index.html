@@ -541,7 +541,16 @@
 
     <div class="report-section">
       <div class="report-section-title">All financial profiles</div>
-      <div class="report-section-sub">The 10 profiles used in DebtSnap's behavioral framework — yours is highlighted.</div>
+      <div class="report-section-sub">The 10 profiles used in Debt-Snap's behavioral framework — yours is highlighted.</div>
+      <div class="pair-key">
+        <div class="pair-key-title">How to read the profile codes</div>
+        <div class="pair-key-grid">
+          <div class="pair-key-item"><span class="pair-letter">W / D</span><span class="pair-meaning"><strong>Willingness:</strong> Engaged (W) or Guarded (D) — how open you are to facing your debt directly</span></div>
+          <div class="pair-key-item"><span class="pair-letter">A / I</span><span class="pair-meaning"><strong>Ability:</strong> Capable (A) or Constrained (I) — your current financial capacity to act</span></div>
+          <div class="pair-key-item"><span class="pair-letter">O / C</span><span class="pair-meaning"><strong>Organization:</strong> Organized (O) or Scattered (C) — how structured your approach to finances is</span></div>
+          <div class="pair-key-item"><span class="pair-letter">R / E</span><span class="pair-meaning"><strong>Response style:</strong> Analytical (R) or Feeling-led (E) — how you process and act on financial decisions</span></div>
+        </div>
+      </div>
       <div id="report-profile-table"></div>
     </div>
 
@@ -565,8 +574,12 @@
   <div class="footer-inner">
     <div class="footer-brand">
       <span class="footer-logo">Debt-Snap</span>
-      <p class="footer-tagline">A free, instant debt diagnosis — no personal details, no payment, no credit card required. Your snapshot is generated privately in your browser and never stored.</p>
-      <p class="footer-tagline" style="margin-top:8px">Want more? Purchase your full paid plan for a complete 5-step action report, and optionally sign up for ongoing coaching, resources, and support to help you self-solve your debt situation — on your terms.</p>
+      <p class="footer-tagline">Your free, instant debt snapshot is generated privately in your browser. No personal details required. No payment. No credit card. Nothing stored.</p>
+      <p class="footer-tagline" style="margin-top:8px">Want the full picture? Get your complete paid report for $49 once-off, and optionally add ongoing coaching, resources, and support to help you self-solve your debt situation on your own terms.</p>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:20px">
+        <button class="btn-primary red" onclick="startApp()" style="font-size:13px;padding:10px 20px">Get my free snapshot</button>
+        <button class="btn-secondary" onclick="showPage('process')" style="font-size:13px;padding:10px 20px">How it works</button>
+      </div>
     </div>
     <div class="footer-links">
       <button class="footer-link" onclick="showPage('terms')">Terms of use</button>
@@ -628,7 +641,7 @@
       </section>
       <section class="legal-section">
         <h2>11. Contact</h2>
-        <p>For questions about these Terms of Use, please contact us at <a href="mailto:legal@debt-snap.com">legal@debt-snap.com</a>.</p>
+        <p>For questions about these Terms of Use, please contact us at <a href="/cdn-cgi/l/email-protection#472b2220262b07232225336a342926376924282a"><span class="__cf_email__" data-cfemail="f29e9795939eb296979086df819c9382dc919d9f">[email&#160;protected]</span></a>.</p>
       </section>
     </div>
   </div>
@@ -677,7 +690,7 @@
       </section>
       <section class="legal-section">
         <h2>9. Your rights</h2>
-        <p>If you have created an account with Debt-Snap, you may request access to, correction of, or deletion of your account data at any time by contacting us at <a href="mailto:privacy@debt-snap.com">privacy@debt-snap.com</a>. We will respond within 30 days. Users in California have additional rights under the California Consumer Privacy Act (CCPA).</p>
+        <p>If you have created an account with Debt-Snap, you may request access to, correction of, or deletion of your account data at any time by contacting us at <a href="/cdn-cgi/l/email-protection#6e1e1c07180f0d172e0a0b0c1a431d000f1e400d0103"><span class="__cf_email__" data-cfemail="3343415a4552504a73575651471e405d52431d505c5e">[email&#160;protected]</span></a>. We will respond within 30 days. Users in California have additional rights under the California Consumer Privacy Act (CCPA).</p>
       </section>
       <section class="legal-section">
         <h2>10. Children's privacy</h2>
@@ -687,14 +700,4 @@
         <h2>11. Changes to this statement</h2>
         <p>We may update this Privacy Statement from time to time. Material changes will be communicated to registered users by email. The date of the most recent revision appears at the top of this page.</p>
       </section>
-      <section class="legal-section">
-        <h2>12. Contact</h2>
-        <p>For any privacy-related questions or requests, contact us at <a href="mailto:privacy@debt-snap.com">privacy@debt-snap.com</a>.</p>
-      </section>
-    </div>
-  </div>
-</div>
-
-<script src="app.js"></script>
-</body>
-</html>
+      <section class="legal
