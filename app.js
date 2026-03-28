@@ -228,8 +228,16 @@ function showStep(id, pct) {
   const pw = document.getElementById('progress-wrap');
   pw.style.display = 'block';
   document.getElementById('progress-fill').style.width = pct + '%';
-  ['ps1','ps2','ps3'].forEach((s,i) => {
-    document.getElementById(s).classList.toggle('active', pct > i * 33);
+  const steps = ['ps1','ps2','ps3'];
+  const pcts  = [33, 66, 100];
+  steps.forEach((s, i) => {
+    const el = document.getElementById(s);
+    el.classList.remove('active','done');
+    if (pct === pcts[i]) {
+      el.classList.add('active');
+    } else if (pct > pcts[i]) {
+      el.classList.add('done');
+    }
   });
   window.scrollTo(0, 0);
 }
